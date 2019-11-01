@@ -531,7 +531,7 @@ function generate_new_solution_bounds(bounds :: Tuple{Vector{Float64}, Vector{Fl
     return generate_new_solution
 end
 
-function create_mixer(f :: Function, n :: Int64, population_size :: Int64, forced_improvement :: Symbol, crf :: ClusteringReductionFormula,
+function create_qgomea_mixer(f :: Function, n :: Int64, population_size :: Int64, forced_improvement :: Symbol, crf :: ClusteringReductionFormula,
     best :: Union{Nothing, Ref{Solution}} = nothing;
     initial_solution_generator :: Function) :: QGomeaMixer
     # Generate initial population.
@@ -547,7 +547,7 @@ function create_mixer(f :: Function, n :: Int64, population_size :: Int64, force
     end
 end
 
-function optimize_gomea(rf :: Function, n :: Int64, t=10.0;
+function optimize_qgomea(rf :: Function, n :: Int64, t=10.0;
     initial_solution_generator :: Function = generate_new_solution_random,
     population_size_base=4, crf=UPGMA(), forced_improvement :: Symbol = :default, target_fitness :: Union{Nothing, Float64} = nothing)
     #
@@ -556,7 +556,7 @@ function optimize_gomea(rf :: Function, n :: Int64, t=10.0;
 
     next_population_size = population_size_base*2
 
-    initial_mixer = create_mixer(f, n, population_size_base, forced_improvement, crf, initial_solution_generator=initial_solution_generator)
+    initial_mixer = create_qgomea_mixer(f, n, population_size_base, forced_improvement, crf, initial_solution_generator=initial_solution_generator)
     mixers = QGomeaMixer[initial_mixer]
     steps = 0
     last_steps = 0
@@ -580,7 +580,7 @@ function optimize_gomea(rf :: Function, n :: Int64, t=10.0;
         # Or if all have converged. Oh well.
         if last_steps == 4 || length(mixers) == 0
             last_steps = 0
-            push!(mixers, create_mixer(f, n, next_population_size, forced_improvement, crf, best, initial_solution_generator=initial_solution_generator))
+            push!(mixers, create_qgomea_mixer(f, n, next_population_size, forced_improvement, crf, best, initial_solution_generator=initial_solution_generator))
             next_population_size *= 2
         end
         filter!(f -> !f.converged[], mixers)
@@ -589,70 +589,4 @@ function optimize_gomea(rf :: Function, n :: Int64, t=10.0;
     end
 
     return (best[].fitness, invperm(best[].perm))
-end
-
-## Some old approaches
-function optimize_simple(f :: Function, n :: Int64;
-        population_size=n, pruning_ratio=4, crf=UPGMA(), forced_improvement :: Symbol=:default)
-    # Generate a population of n, taking the best of 3 solutions.
-    population = [maximum(evaluate(f, shuffle!(collect(1:n))) for _ in 1:pruning_ratio) for _ in 1:population_size]
-    # Initial state!
-    D = zeros(Float64, (n, n))
-    fos = Vector{Vector{Int64}}()
-    # Collect into vector
-    pm = QGomeaMixer(f, n, population, D, fos, forced_improvement)
-    step!(pm; first_time=true)
-    fails = 0
-    # Keep stepping as long as improving.
-    while (step!(pm) && (fails = 0; true)) || (fails += 1) < 10
-    end
-
-    return maximum(pm.population)
-end
-
-function optimize_timed(f :: Function, n :: Int64, t=10.0;
-        initial_population_size=n, pruning_ratio=3, crf=UPGMA())
-    #
-    population_size = initial_population_size
-    population_size_cap = ceil(Int64, n*sqrt(n))
-    move_over = ceil(Int64, population_size/3*2)
-    starting_time = time()
-    # Generate a population of n, taking the best of 3 solutions.
-    generate_new_solution() = maximum(evaluate(f, shuffle!(collect(1:n))) for _ in 1:pruning_ratio)
-    population = [generate_new_solution() for _ in 1:population_size]
-    # Initial state!
-    D = zeros(Float64, (n, n))
-    fos = Vector{Vector{Int64}}()
-    # Collect into vector
-    pm = QGomeaMixer(f, n, population, D, fos, crf)
-
-    best = pm.best
-
-    while time() - starting_time < t
-        fails = 0
-        generations = 0
-        # Keep stepping as long as improving.
-        while ((step!(pm) && (fails = 0; true)) || (fails += 1) < 10) && time() - starting_time < t
-            generations += 1
-        end
-        if pm.best[] > best[]
-            best = pm.best
-        end
-        # Converged! Restart with a small subset of the previous population transferred.
-        sort!(pm.population, rev=true)
-        if (population_size < population_size_cap) && generations < 5
-            move_over = population_size
-            population_size *= 2
-            population_size = min(population_size, population_size_cap)
-        else
-            move_over = ceil(Int64, population_size/3*2)
-        end
-        resize!(pm.population, population_size)
-        view(pm.population, (move_over+1):population_size) .=
-            (generate_new_solution() for _ in (move_over+1):population_size)
-        shuffle!(pm.population)
-        pm = QGomeaMixer(f, n, population, D, fos, crf, best)
-    end
-
-    return best[]
 end
