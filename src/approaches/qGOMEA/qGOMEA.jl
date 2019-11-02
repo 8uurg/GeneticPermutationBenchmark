@@ -106,12 +106,12 @@ function create_differential_donor!(dst :: Vector{Int64}, orig_dst :: Vector{Int
 end
 
 ##
-mutable struct Solution
+mutable struct QGomeaSolution
     perm :: Vector{Int64}
     fitness :: Float64
 end
-Base.isless(a :: Solution, b :: Solution) = isless(a.fitness, b.fitness)
-Base.isequal(a :: Solution, b :: Solution) = a.perm == b.perm
+Base.isless(a :: QGomeaSolution, b :: QGomeaSolution) = isless(a.fitness, b.fitness)
+Base.isequal(a :: QGomeaSolution, b :: QGomeaSolution) = a.perm == b.perm
 ##
 function population_has_converged(pop :: Vector{X}) :: Bool where {X}
     if length(pop) <= 1
@@ -126,14 +126,14 @@ struct QGomeaMixer
     # Important
     f :: Function
     n :: Int64
-    population :: Vector{Solution}
+    population :: Vector{QGomeaSolution}
     D :: Matrix{Float64}
     fos :: Vector{Vector{Int64}}
     # Internal config.
     forced_improvement :: Symbol
     crf :: ClusteringReductionFormula
     # Stats & info
-    best :: Ref{Solution}
+    best :: Ref{QGomeaSolution}
 
     generations :: Ref{Int64}
     generations_no_improvement :: Ref{Int64}
@@ -149,7 +149,7 @@ struct QGomeaMixer
     function QGomeaMixer(
         f :: Function,
         n :: Int64,
-        population :: Vector{Solution},
+        population :: Vector{QGomeaSolution},
         D :: Matrix{Float64},
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
@@ -166,12 +166,12 @@ struct QGomeaMixer
     function QGomeaMixer(
         f :: Function,
         n :: Int64,
-        population :: Vector{Solution},
+        population :: Vector{QGomeaSolution},
         D :: Matrix{Float64},
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
         crf :: ClusteringReductionFormula,
-        best :: Ref{Solution})
+        best :: Ref{QGomeaSolution})
         #
         best[] = max(best[], maximum(population))
         new(f, n, population, D, fos,
@@ -229,7 +229,7 @@ end
 
 function evaluate(f :: Function, perm :: Vector{Int64})
     fitness = f(perm)
-    return Solution(perm, fitness)
+    return QGomeaSolution(perm, fitness)
 end
 
 function calcD!(pm :: QGomeaMixer)
@@ -356,7 +356,7 @@ function lsmixing(pm :: QGomeaMixer,
     return improved
 end
 
-function edamixing(sol :: Solution, pm :: QGomeaMixer; shuffle_fos=true, donor_fixed :: Union{Nothing, Ref{Solution}} = nothing)
+function edamixing(sol :: QGomeaSolution, pm :: QGomeaMixer; shuffle_fos=true, donor_fixed :: Union{Nothing, Ref{QGomeaSolution}} = nothing)
     # Shuffle if required.
     if shuffle_fos
         shuffle!(pm.fos)
@@ -428,9 +428,9 @@ function step!(pm :: QGomeaMixer)
     #
     #println([a.fitness for a in sort(pm.population, rev=true)[1:10]])
     # Calculate D depending on the population.
-    # calcD!(pm)
+    calcD!(pm)
     # calcD_original!(pm)
-    calcD_original_regularized!(pm)
+    # calcD_original_regularized!(pm)
     # calcD_random!(pm)
     # Compute FOS
     empty!(pm.fos)
@@ -510,14 +510,14 @@ end
 
 function generate_new_solution_random(f :: Function, n :: Int64)
     perm = shuffle!(collect(1:n))
-    Solution(perm, f(perm))
+    QGomeaSolution(perm, f(perm))
 end
 
 function generate_new_solution_bounds(bounds :: Vector{Tuple{Float64, Float64}})
     function generate_new_solution(f :: Function, n :: Int64)
         @assert length(bounds) == n
         perm = invperm(sortperm([rand() * (a[2]-a[1]) + a[1] for a in bounds]))
-        Solution(perm, f(perm))
+        QGomeaSolution(perm, f(perm))
     end
     return generate_new_solution
 end
@@ -526,13 +526,13 @@ function generate_new_solution_bounds(bounds :: Tuple{Vector{Float64}, Vector{Fl
     function generate_new_solution(f :: Function, n :: Int64)
         @assert length(bounds) == n
         perm = invperm(sortperm([rand() * (ub-lb) + lb for (lb, ub) in zip(bounds[1], bounds[2])]))
-        Solution(perm, f(perm))
+        QGomeaSolution(perm, f(perm))
     end
     return generate_new_solution
 end
 
 function create_qgomea_mixer(f :: Function, n :: Int64, population_size :: Int64, forced_improvement :: Symbol, crf :: ClusteringReductionFormula,
-    best :: Union{Nothing, Ref{Solution}} = nothing;
+    best :: Union{Nothing, Ref{QGomeaSolution}} = nothing;
     initial_solution_generator :: Function) :: QGomeaMixer
     # Generate initial population.
     population = [initial_solution_generator(f, n) for _ in 1:population_size]
