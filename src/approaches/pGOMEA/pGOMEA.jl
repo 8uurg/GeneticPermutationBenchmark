@@ -33,6 +33,40 @@ function mix!(dst :: Vector{Float64}, src :: Vector{Float64}, mask :: Vector{Int
     return dst
 end
 
+function reencode!(sol :: Vector{Float64}, perm :: Vector{Int64}, rk :: Vector{Float64})
+    # Generate new random keys
+    @inbounds for i in 1:length(rk)
+        rk[i] = rand(Float64)
+    end
+    sort!(rk)
+    # Find the permutation that sorts the original keys.
+    sortperm!(perm, sol)
+    # Inversely permute the new keys in rk onto sol.
+    # So that the original `sol` and new `sol` both encode the same underlying permutation.
+    @inbounds for (i, j) in enumerate(perm)
+        # The key at index j has rank i. `rk` is sorted, thus index = rank.
+        sol[j] = rk[i] 
+    end
+    return sol
+end
+
+function random_rescale!(sol :: Vector{Float64}, mask :: Vector{Int64})
+    # Find the minimum and maximum to rescale
+    sm_min, sm_max = extrema(sol[i] for i in mask)
+    sm_range = sm_max - sm_min
+    # How many intervals?
+    n_intervals = length(sol)
+    # Pick an interval [random_left_bracket:random_left_bracket+1/n_intervals]
+    # to scale elements to.
+    random_left_bracket = rand(1:n_intervals)
+    # Remap keys from [sm_min, sm_max] to [random_left_bracket:random_left_bracket+1/n_intervals]
+    for i in mask
+        sol[i] = ((sol[i] - sm_min) / sm_range) * (1.0 / n_intervals) + random_left_bracket
+    end
+
+    return sol
+end
+
 ##
 mutable struct PGomeaSolution
     perm :: Vector{Float64}
@@ -68,6 +102,9 @@ struct PGomeaMixer
     converged :: Ref{Bool}
     # Memory allocations.
     mixing_backup :: Vector{Float64}
+    
+    reencode_keys :: Vector{Float64}
+    reencode_perm :: Vector{Int64}
 
     function PGomeaMixer(
         f :: Function,
@@ -82,7 +119,8 @@ struct PGomeaMixer
             forced_improvement, crf,
             Ref(maximum(population)),
             Ref(0), Ref(0), Ref(false),
-            collect(1:n))
+            collect(1:n), 
+            collect(LinRange(0.0, 1.0, n)), collect(1:n))
     end
 
     function PGomeaMixer(
@@ -100,51 +138,8 @@ struct PGomeaMixer
             forced_improvement, crf,
             best,
             Ref(0), Ref(0), Ref(false),
-            collect(1:n))
-    end
-end
-
-# function mix!(dst :: Vector{T}, donor :: Vector{T}, viewMask, storage :: Vector{Int64}) where {T}
-#     dstview = view(dst, viewMask)
-#     sort!(dstview)
-#     resize!(storage, length(dstview))
-#     Base.invpermute!!(dstview, sortperm!(storage, view(donor, viewMask)))
-#     dst
-# end
-
-# Using Built-In BitSets.
-# 2x as fast.
-function mix_order!(dst :: Vector{Int64}, donor :: Vector{Int64}, viewMask :: Vector{Int64},
-        ds1 :: BitSet, ds2 :: BitSet, storage :: Vector{Int64})
-    #
-    empty!(ds1); empty!(ds2)
-    @inbounds for o in viewMask
-        push!(ds1, dst[o])
-        push!(ds2, donor[o])
-    end
-    @inbounds for (nds1,nds2) in zip(ds1, ds2)
-        storage[nds2] = nds1
-    end
-    @inbounds for o in viewMask
-        dst[o] = storage[donor[o]]
-    end
-end
-
-# Using own IndexSet type, somewhat faster due to less checks.
-# ~ 4x as fast.
-function mix_order!(dst :: Vector{Int64}, donor :: Vector{Int64}, viewMask :: Vector{Int64},
-        ds1 :: IndexSet{T}, ds2 :: IndexSet{T}, storage :: Vector{Int64}) where {T}
-    #
-    empty!(ds1); empty!(ds2)
-    @inbounds for o in viewMask
-        push!(ds1, convert(UInt64, dst[o]))
-        push!(ds2, convert(UInt64, donor[o]))
-    end
-    for (nds1,nds2) in zip(ds1, ds2)
-        storage[nds2] = nds1
-    end
-    @inbounds for o in viewMask
-        dst[o] = storage[donor[o]]
+            collect(1:n), 
+            collect(LinRange(0.0, 1.0, n)), collect(1:n))
     end
 end
 
