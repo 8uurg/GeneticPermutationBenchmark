@@ -3,34 +3,11 @@ import Statistics:quantile
 include("../../utilities/FastClustering.jl")
 
 ## Inverse permutation with preset location
-function invperm!(dst :: Vector{Int64}, src :: Vector{Int64})
-    @inbounds for (i, j) in enumerate(src)
-        dst[j] = i
-    end
-    dst
-end
-
-function invperm_ignorezero!(dst :: Vector{Int64}, src :: Vector{Int64})
-    @inbounds for (i, j) in enumerate(src)
-        if j != 0
-            dst[j] = i
-        end
-    end
-    dst
-end
-
-function invperm!(dst :: Vector{Int64}, src :: Vector{Int64}, subset :: Vector{Int64})
-    @inbounds for i in subset
-        dst[src[i]] = i
-    end
-    dst
-end
-
-function wrap_assignment_to_permutation(f :: Function)
+function wrap_rkeys_to_permutation(f :: Function)
     prm = collect(1:100)
     function ev(assignment :: Vector{Int64})
         resize!(prm, length(assignment))
-        invperm!(prm, assignment)
+        sortperm!(prm, assignment)
         return f(prm)
     end
     return ev
@@ -49,69 +26,20 @@ circshift1_inplace!(A) = circshift_inplace!(A, 1)
 
 
 ## Recombination of position
-function mix_position!(dst :: Vector{Int64}, donor :: Vector{Int64}, mask :: Vector{Int64},
-    storage1 :: Vector{Int64}, storage2 :: Vector{Int64})
-    # ...
-    fill!(storage1, -1)
-    fill!(storage2, 0)
-    invperm!(storage1, donor, mask)
-    @inbounds dst[mask] .= 0
-    invperm_ignorezero!(storage2, dst)
-    q = 1
-    @inbounds for j in storage2
-        if j == 0
-            # Skip masked items.
-            continue
-        end
-        while storage1[q] != -1
-            q += 1
-        end
-        storage1[q] = j
-    end
-    invperm!(dst, storage1)
-end
-
-function create_differential_donor!(dst :: Vector{Int64}, orig_dst :: Vector{Int64}, orig_donor :: Vector{Int64}, mask :: Vector{Int64}; offset :: Union{Int64, Symbol} = 0)
-    #reference = minimum((orig_donor[i],i) for i in mask)[2]
-    reference = rand(mask)
-    if typeof(offset) === Int64
-        offsett = offset
-    else
-        if offset == :rand_neg1to1
-            offsett = rand(-1:1)
-        elseif offset == :rand_difference
-            a = orig_dst[reference] - orig_donor[reference]
-            b = 0
-            a, b = minmax(a, b)
-            offsett = rand(a:b)*rand(0:1)
-        end
-    end
+function mix!(dst :: Vector{Float64}, src :: Vector{Float64}, mask :: Vector{Int64})
     for i in mask
-        dst[i] = orig_donor[reference] + orig_dst[i] - orig_dst[reference] + offsett
-    end
-    dst_min, dst_max = extrema(dst[i] for i in mask)
-    if dst_min < 1
-        # Need to do a repair for negative numbers.
-        for i in mask
-            dst[i] += -dst_min + 1
-        end
-    elseif dst_max > length(dst)
-        # Fix the out of bounds elements!
-        dstdiff = length(dst) - dst_max
-        for i in mask
-            dst[i] += dstdiff
-        end
+        dst[i] = src[i]
     end
     return dst
 end
 
 ##
-mutable struct Solution
-    perm :: Vector{Int64}
+mutable struct PGomeaSolution
+    perm :: Vector{Float64}
     fitness :: Float64
 end
-Base.isless(a :: Solution, b :: Solution) = isless(a.fitness, b.fitness)
-Base.isequal(a :: Solution, b :: Solution) = a.perm == b.perm
+Base.isless(a :: PGomeaSolution, b :: PGomeaSolution) = isless(a.fitness, b.fitness)
+Base.isequal(a :: PGomeaSolution, b :: PGomeaSolution) = a.perm == b.perm
 ##
 function population_has_converged(pop :: Vector{X}) :: Bool where {X}
     if length(pop) <= 1
@@ -126,30 +54,25 @@ struct PGomeaMixer
     # Important
     f :: Function
     n :: Int64
-    population :: Vector{Solution}
+    population :: Vector{PGomeaSolution}
     D :: Matrix{Float64}
     fos :: Vector{Vector{Int64}}
     # Internal config.
     forced_improvement :: Symbol
     crf :: ClusteringReductionFormula
     # Stats & info
-    best :: Ref{Solution}
+    best :: Ref{PGomeaSolution}
 
     generations :: Ref{Int64}
     generations_no_improvement :: Ref{Int64}
     converged :: Ref{Bool}
     # Memory allocations.
-    mixing_backup :: Vector{Int64}
-    mixing_virtual_donor :: Vector{Int64}
-    mixing_perm :: Vector{Int64}
-    mixing_perm_2 :: Vector{Int64}
+    mixing_backup :: Vector{Float64}
 
-    bs1 :: IndexSet
-    bs2 :: IndexSet
     function PGomeaMixer(
         f :: Function,
         n :: Int64,
-        population :: Vector{Solution},
+        population :: Vector{PGomeaSolution},
         D :: Matrix{Float64},
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
@@ -159,27 +82,25 @@ struct PGomeaMixer
             forced_improvement, crf,
             Ref(maximum(population)),
             Ref(0), Ref(0), Ref(false),
-            collect(1:n), collect(1:n), collect(1:n), collect(1:n),
-            IndexSet(n), IndexSet(n))
+            collect(1:n))
     end
 
     function PGomeaMixer(
         f :: Function,
         n :: Int64,
-        population :: Vector{Solution},
+        population :: Vector{PGomeaSolution},
         D :: Matrix{Float64},
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
         crf :: ClusteringReductionFormula,
-        best :: Ref{Solution})
+        best :: Ref{PGomeaSolution})
         #
         best[] = max(best[], maximum(population))
         new(f, n, population, D, fos,
             forced_improvement, crf,
             best,
             Ref(0), Ref(0), Ref(false),
-            collect(1:n), collect(1:n), collect(1:n), collect(1:n),
-            IndexSet(n), IndexSet(n))
+            collect(1:n))
     end
 end
 
@@ -229,7 +150,7 @@ end
 
 function evaluate(f :: Function, perm :: Vector{Int64})
     fitness = f(perm)
-    return Solution(perm, fitness)
+    return PGomeaSolution(perm, fitness)
 end
 
 function calcD!(pm :: PGomeaMixer)
@@ -322,41 +243,7 @@ function findchildrenpairs(parents :: Vector{Int64})
     return result
 end
 
-function lsmixing(pm :: PGomeaMixer,
-    parentChild :: Vector{Pair{Int64, Tuple{Int64, Int64}}};
-    shuffle_parent_child = true)
-    #
-    improved = false
-    if shuffle_parent_child
-        shuffle!(parentChild)
-    end
-    for individual in pm.population
-        if rand() < 0.9
-            continue
-        end
-        copyto!(pm.mixing_backup, individual.perm)
-        for parent_children in parentChild
-            parent = parent_children.first
-            (child_a, child_b) = parent_children.second
-            reverse!(view(pm.mixing_backup, pm.fos[parent]))
-            reverse!(view(pm.mixing_backup, pm.fos[child_a]))
-            reverse!(view(pm.mixing_backup, pm.fos[child_b]))
-            new_fitness = pm.f(pm.mixing_backup)
-            if new_fitness > individual.fitness
-                copyto!(individual.perm, pm.mixing_backup)
-                improved = true
-                individual.fitness = new_fitness
-            # elseif new_fitness == individual.fitness
-            #     copyto!(individual.perm, pm.mixing_backup)
-            elseif new_fitness < individual.fitness
-                copyto!(pm.mixing_backup, individual.perm)
-            end
-        end
-    end
-    return improved
-end
-
-function edamixing(sol :: Solution, pm :: PGomeaMixer; shuffle_fos=true, donor_fixed :: Union{Nothing, Ref{Solution}} = nothing)
+function edamixing(sol :: PGomeaSolution, pm :: PGomeaMixer; shuffle_fos=true, donor_fixed :: Union{Nothing, Ref{PGomeaSolution}} = nothing)
     # Shuffle if required.
     if shuffle_fos
         shuffle!(pm.fos)
@@ -376,48 +263,36 @@ function edamixing(sol :: Solution, pm :: PGomeaMixer; shuffle_fos=true, donor_f
             donor_sol = donor_fixed[]
         end
         donor = donor_sol.perm
-        #mix!(pm.mixing_backup, donor, s, pm.mixing_perm)
+        
         # If subsets are equal in value, no mixing is going to make
         # a difference
         if all(pm.mixing_backup[i] == donor[i] for i in s)
             continue
         end
-        for op in 1:2
-            if op === 1
-                create_differential_donor!(pm.mixing_virtual_donor, pm.mixing_backup, donor, s,
-                    offset=0) #Can also be :rand_difference or :rand_neg1to1
-                mix_position!(pm.mixing_backup, pm.mixing_virtual_donor, s, pm.mixing_perm, pm.mixing_perm_2)
-            elseif op === 2 #
-                # This operator is a no-op on |s| == 1, no mixing and evaluation required.
-                if length(s) == 1# && length(s) >= round(pm.n/12*10)
-                    continue
-                end
-                mix_order!(pm.mixing_backup, donor, s, pm.bs1, pm.bs2, pm.mixing_perm)
-            elseif op === 3
-                mix_position!(pm.mixing_backup, donor, s, pm.mixing_perm, pm.mixing_perm_2)
-            end
-            if pm.mixing_backup == dst
-                # Solution stayed the same... No reevaluation needed.
-                continue
-            end
-            fitness = pm.f(pm.mixing_backup)
-            if fitness < sol.fitness #|| (pm.mixing_backup == donor)
-                copyto!(pm.mixing_backup, dst)
-            elseif fitness == sol.fitness
-                # GOMEA generally copies over even without improvements.
-                copyto!(dst, pm.mixing_backup)
-                if dst != pm.mixing_backup
-                    solution_changed = true
-                end
-            elseif fitness > sol.fitness
-                copyto!(dst, pm.mixing_backup)
-                sol.fitness = fitness
-                current_improved = true
+
+        mix!(pm.mixing_backup, donor, s)
+        
+        if pm.mixing_backup == dst
+            # Solution stayed the same... No reevaluation needed.
+            continue
+        end
+        fitness = pm.f(pm.mixing_backup)
+        if fitness < sol.fitness #|| (pm.mixing_backup == donor)
+            copyto!(pm.mixing_backup, dst)
+        elseif fitness == sol.fitness
+            # GOMEA generally copies over even without improvements.
+            copyto!(dst, pm.mixing_backup)
+            if dst != pm.mixing_backup
                 solution_changed = true
-                if fitness > pm.best[].fitness
-                    pm.best[] = sol
-                    best_improved = true
-                end
+            end
+        elseif fitness > sol.fitness
+            copyto!(dst, pm.mixing_backup)
+            sol.fitness = fitness
+            current_improved = true
+            solution_changed = true
+            if fitness > pm.best[].fitness
+                pm.best[] = sol
+                best_improved = true
             end
         end
     end
@@ -508,31 +383,31 @@ function step!(pm :: PGomeaMixer)
     return improved_any
 end
 
-function generate_new_solution_random(f :: Function, n :: Int64)
-    perm = shuffle!(collect(1:n))
-    Solution(perm, f(perm))
+function generate_new_pgomeasolution_random(f :: Function, n :: Int64)
+    perm = rand(Float64, n)
+    PGomeaSolution(perm, f(perm))
 end
 
-function generate_new_solution_bounds(bounds :: Vector{Tuple{Float64, Float64}})
+function generate_new_pgomeasolution_bounds(bounds :: Vector{Tuple{Float64, Float64}})
     function generate_new_solution(f :: Function, n :: Int64)
         @assert length(bounds) == n
-        perm = invperm(sortperm([rand() * (a[2]-a[1]) + a[1] for a in bounds]))
-        Solution(perm, f(perm))
+        perm = [rand() * (a[2]-a[1]) + a[1] for a in bounds]
+        PGomeaSolution(perm, f(perm))
     end
     return generate_new_solution
 end
 
-function generate_new_solution_bounds(bounds :: Tuple{Vector{Float64}, Vector{Float64}})
+function generate_new_pgomeasolution_bounds(bounds :: Tuple{Vector{Float64}, Vector{Float64}})
     function generate_new_solution(f :: Function, n :: Int64)
         @assert length(bounds) == n
         perm = invperm(sortperm([rand() * (ub-lb) + lb for (lb, ub) in zip(bounds[1], bounds[2])]))
-        Solution(perm, f(perm))
+        PGomeaSolution(perm, f(perm))
     end
     return generate_new_solution
 end
 
 function create_mixer(f :: Function, n :: Int64, population_size :: Int64, forced_improvement :: Symbol, crf :: ClusteringReductionFormula,
-    best :: Union{Nothing, Ref{Solution}} = nothing;
+    best :: Union{Nothing, Ref{PGomeaSolution}} = nothing;
     initial_solution_generator :: Function) :: PGomeaMixer
     # Generate initial population.
     population = [initial_solution_generator(f, n) for _ in 1:population_size]
@@ -547,12 +422,12 @@ function create_mixer(f :: Function, n :: Int64, population_size :: Int64, force
     end
 end
 
-function optimize_gomea(rf :: Function, n :: Int64, t=10.0;
-    initial_solution_generator :: Function = generate_new_solution_random,
+function optimize_pgomea(rf :: Function, n :: Int64, t=10.0;
+    initial_solution_generator :: Function = generate_new_pgomeasolution_random,
     population_size_base=4, crf=UPGMA(), forced_improvement :: Symbol = :default, target_fitness :: Union{Nothing, Float64} = nothing)
     #
     time_start = time()
-    f = wrap_assignment_to_permutation(rf)
+    f = wrap_rkeys_to_permutation(rf)
 
     next_population_size = population_size_base*2
 
@@ -589,70 +464,4 @@ function optimize_gomea(rf :: Function, n :: Int64, t=10.0;
     end
 
     return (best[].fitness, invperm(best[].perm))
-end
-
-## Some old approaches
-function optimize_simple(f :: Function, n :: Int64;
-        population_size=n, pruning_ratio=4, crf=UPGMA(), forced_improvement :: Symbol=:default)
-    # Generate a population of n, taking the best of 3 solutions.
-    population = [maximum(evaluate(f, shuffle!(collect(1:n))) for _ in 1:pruning_ratio) for _ in 1:population_size]
-    # Initial state!
-    D = zeros(Float64, (n, n))
-    fos = Vector{Vector{Int64}}()
-    # Collect into vector
-    pm = PGomeaMixer(f, n, population, D, fos, forced_improvement)
-    step!(pm; first_time=true)
-    fails = 0
-    # Keep stepping as long as improving.
-    while (step!(pm) && (fails = 0; true)) || (fails += 1) < 10
-    end
-
-    return maximum(pm.population)
-end
-
-function optimize_timed(f :: Function, n :: Int64, t=10.0;
-        initial_population_size=n, pruning_ratio=3, crf=UPGMA())
-    #
-    population_size = initial_population_size
-    population_size_cap = ceil(Int64, n*sqrt(n))
-    move_over = ceil(Int64, population_size/3*2)
-    starting_time = time()
-    # Generate a population of n, taking the best of 3 solutions.
-    generate_new_solution() = maximum(evaluate(f, shuffle!(collect(1:n))) for _ in 1:pruning_ratio)
-    population = [generate_new_solution() for _ in 1:population_size]
-    # Initial state!
-    D = zeros(Float64, (n, n))
-    fos = Vector{Vector{Int64}}()
-    # Collect into vector
-    pm = PGomeaMixer(f, n, population, D, fos, crf)
-
-    best = pm.best
-
-    while time() - starting_time < t
-        fails = 0
-        generations = 0
-        # Keep stepping as long as improving.
-        while ((step!(pm) && (fails = 0; true)) || (fails += 1) < 10) && time() - starting_time < t
-            generations += 1
-        end
-        if pm.best[] > best[]
-            best = pm.best
-        end
-        # Converged! Restart with a small subset of the previous population transferred.
-        sort!(pm.population, rev=true)
-        if (population_size < population_size_cap) && generations < 5
-            move_over = population_size
-            population_size *= 2
-            population_size = min(population_size, population_size_cap)
-        else
-            move_over = ceil(Int64, population_size/3*2)
-        end
-        resize!(pm.population, population_size)
-        view(pm.population, (move_over+1):population_size) .=
-            (generate_new_solution() for _ in (move_over+1):population_size)
-        shuffle!(pm.population)
-        pm = PGomeaMixer(f, n, population, D, fos, crf, best)
-    end
-
-    return best[]
 end
