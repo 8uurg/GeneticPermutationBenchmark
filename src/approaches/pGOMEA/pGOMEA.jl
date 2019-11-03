@@ -266,6 +266,10 @@ function edamixing(sol :: PGomeaSolution, pm :: PGomeaMixer; shuffle_fos=true, d
         end
 
         mix!(pm.mixing_backup, donor, s)
+
+        if rand() < 0.1
+            random_rescale!(pm.mixing_backup, s)
+        end
         
         if pm.mixing_backup == dst
             # Solution stayed the same... No reevaluation needed.
