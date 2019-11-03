@@ -39,7 +39,7 @@ end
 ## Circular shifting of a subset through reversals.
 function circshift_inplace!(A, shifts, start=firstindex(A), stop=lastindex(A))
      shifts = mod(shifts, length(A))
-     reverse!(A)
+     reverse!(A, start, stop)
      @inbounds reverse!(A, start, start+shifts-1)
      @inbounds reverse!(A, start+shifts, stop)
      return A
