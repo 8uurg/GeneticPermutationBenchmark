@@ -1,2 +1,3 @@
-[ ] Actually make use of random keys and use that instead.
-[ ] Add in re-encoding and random rescaling.
+[x] Actually make use of random keys and use that instead.
+[x] Add in re-encoding and random rescaling.
+[ ] Test implementation
