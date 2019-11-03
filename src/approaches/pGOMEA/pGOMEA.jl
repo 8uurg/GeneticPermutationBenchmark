@@ -295,44 +295,32 @@ function edamixing(sol :: PGomeaSolution, pm :: PGomeaMixer; shuffle_fos=true, d
 end
 
 function step!(pm :: PGomeaMixer)
-    #
-    #println([a.fitness for a in sort(pm.population, rev=true)[1:10]])
-    # Calculate D depending on the population.
+    # Re-encode population
+    map!(s -> reencode!(s.perm, pm.reencode_perm, pm.reencode_keys) pm.population, pm.population)
+    
+    # Calculate D -- the Dependency Matrix -- depending using the population.
     # calcD!(pm)
     # calcD_original!(pm)
     calcD_original_regularized!(pm)
     # calcD_random!(pm)
-    # Compute FOS
+    
+    # Compute FOS using D
     empty!(pm.fos)
     parent_idx = zeros(Int64, 2*pm.n-1)
     fos_indexset = LCP(pm.D, pm.crf; parent_idx=parent_idx)
     append!(pm.fos, collect(a) for (i,a) in enumerate(fos_indexset))
 
     improved_any = false
-    # Perform LS Mixing.
-    # parentChild = findchildrenpairs(parent_idx)
-    # improved_any |= lsmixing(pm, parentChild)
 
-    # - Distance based pruning
-    # merge_distance = zeros(Float64, 2*pm.n-1)
-    # fos_indexset = LCP(pm.D, crf; merge_distance=merge_distance, parent_idx=parent_idx)
-    # mdq95 = quantile(merge_distance, 0.999)
-    # append!(pm.fos, collect(a) for (i,a) in enumerate(fos_indexset) if merge_distance[i] <= mdq95)
-
-    # append!(pm.fos, [i, j] for i in 1:pm.n for j in (i+1):pm.n)
-
-    # Inv distance
-    # fos_indexset = LCP(maximum(pm.D) .- pm.D, crf)
-    # append!(pm.fos, collect(a) for a in fos_indexset)
-
-    # Filter it.
+    # Filter the FOS.
     # sort!(pm.fos, by=f->length(f))
     # filter!(f -> (length(f) > 1 && length(f) < round(pm.n/12*10)), pm.fos)
     filter!(f -> (length(f) < round(pm.n/12*10)), pm.fos)
     # filter!(f -> (length(f) > 1), pm.fos)
     # filter!(f -> (length(f) > 1 && length(f) < pm.n), pm.fos)
     # filter!(f -> (length(f) < pm.n), pm.fos)
-    # Mixymix.
+    
+    # Determine Forced Improvement threshold.
     fi_threshold = typemax(Int64) # :)
     allow_fi_upon_unchanged_solution = false
     if pm.forced_improvement == :default || pm.forced_improvement == :default_sc
@@ -350,6 +338,7 @@ function step!(pm :: PGomeaMixer)
         allow_fi_upon_unchanged_solution = true
     end
 
+    # Perform Optimal Mixing on population
     for individual in pm.population
         # Normal Mixing.
         improved_any_this_mix, solution_changed = edamixing(individual, pm)
@@ -362,6 +351,7 @@ function step!(pm :: PGomeaMixer)
         end
     end
 
+    # Update statistics
     pm.generations[] += 1
 
     if improved_any
