@@ -508,12 +508,12 @@ function step!(pm :: QGomeaMixer)
     return improved_any
 end
 
-function generate_new_solution_random(f :: Function, n :: Int64)
+function generate_new_qgomeasolution_random(f :: Function, n :: Int64)
     perm = shuffle!(collect(1:n))
     QGomeaSolution(perm, f(perm))
 end
 
-function generate_new_solution_bounds(bounds :: Vector{Tuple{Float64, Float64}})
+function generate_new_qgomeasolution_bounds(bounds :: Vector{Tuple{Float64, Float64}})
     function generate_new_solution(f :: Function, n :: Int64)
         @assert length(bounds) == n
         perm = invperm(sortperm([rand() * (a[2]-a[1]) + a[1] for a in bounds]))
@@ -522,7 +522,7 @@ function generate_new_solution_bounds(bounds :: Vector{Tuple{Float64, Float64}})
     return generate_new_solution
 end
 
-function generate_new_solution_bounds(bounds :: Tuple{Vector{Float64}, Vector{Float64}})
+function generate_new_qgomeasolution_bounds(bounds :: Tuple{Vector{Float64}, Vector{Float64}})
     function generate_new_solution(f :: Function, n :: Int64)
         @assert length(bounds) == n
         perm = invperm(sortperm([rand() * (ub-lb) + lb for (lb, ub) in zip(bounds[1], bounds[2])]))
@@ -548,7 +548,7 @@ function create_qgomea_mixer(f :: Function, n :: Int64, population_size :: Int64
 end
 
 function optimize_qgomea(rf :: Function, n :: Int64, t=10.0;
-    initial_solution_generator :: Function = generate_new_solution_random,
+    initial_solution_generator :: Function = generate_new_qgomeasolution_random,
     population_size_base=4, crf=UPGMA(), forced_improvement :: Symbol = :default, target_fitness :: Union{Nothing, Float64} = nothing)
     #
     time_start = time()
