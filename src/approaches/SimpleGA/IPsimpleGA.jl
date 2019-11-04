@@ -79,7 +79,7 @@ function crossover_PMX_both!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, paren
     return dst1, dst2
 end
 
-function crossover_CX(dst :: Vector{Int64}, src :: Vector{Int64}, idst :: Vector{Int64}, isrc :: Vector{Int64})
+function crossover_CX!(dst :: Vector{Int64}, src :: Vector{Int64}, idst :: Vector{Int64}, isrc :: Vector{Int64})
     # Create lookup tables for finding cycles.
     invperm!(idst, dst)
     invperm!(isrc, src)
@@ -88,7 +88,6 @@ function crossover_CX(dst :: Vector{Int64}, src :: Vector{Int64}, idst :: Vector
     # Go through the cycle, copying over elements from src.
     i = c
     while isrc[dst[i]] != c
-        # TODO: A variant that creates both offspring in one go?
         pi = i
         i = isrc[dst[i]]
         dst[pi] = src[pi]
@@ -96,4 +95,26 @@ function crossover_CX(dst :: Vector{Int64}, src :: Vector{Int64}, idst :: Vector
     dst[i] = src[i]
     
     return dst
+end
+
+function crossover_CX_both!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64},
+        idst2 :: Vector{Int64})
+    n = length(parent1)
+    # Offspring start of as each of the parents.
+    copy!(dst1, parent1)
+    copy!(dst2, parent2)
+    # Create lookup table for finding cycles.
+    invperm!(idst2, dst2)
+    # Get a starting point, and store it, so we know when we have found a cycle!
+    c = rand(1:n)
+    # Go through the cycle, copying over elements from src.
+    i = c
+    while idst2[dst1[i]] != c
+        pi = i
+        i = idst2[dst1[i]]
+        dst1[pi], dst2[pi] = dst2[pi], dst1[pi]
+    end
+    dst1[i], dst2[i] = dst2[i], dst1[i]
+    
+    return dst1, dst2
 end
