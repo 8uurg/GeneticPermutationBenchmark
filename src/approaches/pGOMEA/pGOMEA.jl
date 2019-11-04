@@ -5,7 +5,7 @@ include("../../utilities/FastClustering.jl")
 ## Inverse permutation with preset location
 function wrap_rkeys_to_permutation(f :: Function)
     prm = collect(1:100)
-    function ev(assignment :: Vector{Int64})
+    function ev(assignment :: Vector{Float64})
         resize!(prm, length(assignment))
         sortperm!(prm, assignment)
         return f(prm)
@@ -300,8 +300,9 @@ end
 
 function step!(pm :: PGomeaMixer)
     # Re-encode population
-    map!(s -> reencode!(s.perm, pm.reencode_perm, pm.reencode_keys) pm.population, pm.population)
-    
+    for p in pm.population
+        reencode!(p.perm, pm.reencode_perm, pm.reencode_keys)
+    end
     # Calculate D -- the Dependency Matrix -- depending using the population.
     # calcD!(pm)
     # calcD_original!(pm)
@@ -452,5 +453,5 @@ function optimize_pgomea(rf :: Function, n :: Int64, t=10.0;
         steps += 1
     end
 
-    return (best[].fitness, invperm(best[].perm))
+    return (best[].fitness, sortperm(best[].perm))
 end
