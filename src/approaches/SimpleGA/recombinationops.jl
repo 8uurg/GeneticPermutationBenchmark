@@ -16,7 +16,7 @@ function crossover_PMX_point(dst :: Vector{Int64}, src :: Vector{Int64}, idst ::
     idst[a], idst[b] = idst[b], idst[a]
 end
 
-function crossover_PMX_both!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, 
+function crossover_PMX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, 
         idst1 :: Vector{Int64}, idst2 :: Vector{Int64}; ring :: Bool = true)
     n = length(parent1)
     #
@@ -153,12 +153,13 @@ function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
     return dst1, dst2
 end
 
-function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, adj :: Matrix{Int64}, cnt :: Vector{Int64};
-        ring :: Bool = true)
+function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, adj :: Matrix{Int64}, cnt :: Vector{Int64})
     
     n = length(parent1)
     # Create adjacency matrix, 2 parents = maximum of 4 adjacent elements.
     # Predecessor and successor in a single solution are always unique. (No need to check!)
+    fill!(cnt, 0)
+    fill!(adj, 0)
     @inbounds for i in 1:n
         x = parent1[i]
         for p in (parent1, parent2)
@@ -232,4 +233,77 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
         end
     end
     dst
+end
+
+abstract type CrossoverOperator end
+
+struct PMX <: CrossoverOperator
+    idst1 :: Vector{Int64}
+    idst2 :: Vector{Int64}
+
+    function PMX(n :: Int64)
+        new(collect(1:n), collect(1:n))
+    end
+end
+
+function crossover!(operator :: PMX, 
+                    offspring1 :: Vector{Int64}, 
+                    offspring2 :: Vector{Int64},
+                    parent1 :: Vector{Int64},
+                    parent2 :: Vector{Int64})
+    #
+    crossover_PMX!(offspring1, offspring2, parent1, parent2, operator.idst1, operator.idst2; ring=true)
+end
+
+struct CX <: CrossoverOperator
+    idst2 :: Vector{Int64}
+
+    function CX(n :: Int64)
+        new(collect(1:n))
+    end
+end
+
+function crossover!(operator :: CX, 
+                    offspring1 :: Vector{Int64}, 
+                    offspring2 :: Vector{Int64},
+                    parent1 :: Vector{Int64},
+                    parent2 :: Vector{Int64})
+    #
+    crossover_CX!(offspring1, offspring2, parent1, parent2, operator.idst2)
+end
+
+struct OX <: CrossoverOperator
+    seen_dst1 :: BitVector
+    seen_dst2 :: BitVector
+
+    function OX(n :: Int64)
+        new(falses(n), falses(n))
+    end
+end
+
+function crossover!(operator :: OX, 
+                    offspring1 :: Vector{Int64}, 
+                    offspring2 :: Vector{Int64},
+                    parent1 :: Vector{Int64},
+                    parent2 :: Vector{Int64})
+    #
+    crossover_OX!(offspring1, offspring2, parent1, parent2, operator.seen_dst1, operator.seen_dst2; ring=true)
+end
+
+struct ER <: CrossoverOperator
+    adj :: Matrix{Int64}
+    cnt :: Vector{Int64}
+
+    function ER(n :: Int64)
+        new(zeros(Int64, (n, 4)), zeros(Int64, n))
+    end
+end
+
+function crossover!(operator :: ER, 
+                    offspring1 :: Vector{Int64}, 
+                    offspring2 :: Vector{Int64},
+                    parent1 :: Vector{Int64},
+                    parent2 :: Vector{Int64})
+    #
+    crossover_ER!(offspring1, offspring2, parent1, parent2, operator.seen_dst1, operator.seen_dst2)
 end
