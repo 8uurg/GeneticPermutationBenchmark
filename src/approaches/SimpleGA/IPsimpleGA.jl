@@ -16,12 +16,16 @@ function crossover_PMX_point(dst :: Vector{Int64}, src :: Vector{Int64}, idst ::
     idst[a], idst[b] = idst[b], idst[a]
 end
 
-function crossover_PMX(dst :: Vector{Int64}, src :: Vector{Int64}, idst :: Vector{Int64})
+function crossover_PMX!(dst :: Vector{Int64}, src :: Vector{Int64}, idst :: Vector{Int64}; ring :: Bool = true)
     # Build the inverse permutation for use as a lookup table.
     # Effectively working as a find-city but it does need to be kept up-to-date with each swap.
     invperm!(idst, dst)
     # Pick two points on the string
     ms_a, ms_b = rand(1:length(dst)), rand(1:length(dst))
+    # If not acting like a ring, do a swap if neccesary.
+    if !ring && ms_b < ms_a
+        ms_a, ms_b = ms_b, ms_a
+    end
     # These two points from a section on the string (which is assumed to be a ring)
     # eg. if b < a, it wraps around the end.
     if ms_b >= ms_a
