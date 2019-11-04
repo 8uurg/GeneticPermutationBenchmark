@@ -1,4 +1,4 @@
-
+## Crossover Implementations.
 function invperm!(dst :: Vector{Int64}, src :: Vector{Int64})
     @inbounds for (i, j) in enumerate(src)
         dst[j] = i
@@ -151,4 +151,85 @@ function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
         end
     end
     return dst1, dst2
+end
+
+function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, adj :: Matrix{Int64}, cnt :: Vector{Int64};
+        ring :: Bool = true)
+    
+    n = length(parent1)
+    # Create adjacency matrix, 2 parents = maximum of 4 adjacent elements.
+    # Predecessor and successor in a single solution are always unique. (No need to check!)
+    @inbounds for i in 1:n
+        x = parent1[i]
+        for p in (parent1, parent2)
+            x = p[i]
+            pred = p[mod((i - 1 - 1), n) + 1]
+            succ = p[mod((i + 1 - 1), n) + 1]
+            if cnt[x] != 0
+                # Duplicate checking with found adjacent elements.
+                if pred != adj[x, 1] && pred != adj[x, 2]
+                    cnt[x] += 1
+                    adj[x, cnt[x]] = pred
+                end
+                if succ != adj[x, 1] && succ != adj[x, 2]
+                    cnt[x] += 1
+                    adj[x, cnt[x]] = succ
+                end
+            else
+                # Easy case in which we have to perform no checks.
+                cnt[x] = 2
+                adj[x, 1] = pred
+                adj[x, 2] = succ
+            end
+        end
+    end
+    # Construct a solution. Starting from the starting point of one of the two parents
+    # selected at random.
+    c = rand((parent1[1], parent2[1]))
+    dst[1] = c
+    @inbounds for i in 2:n
+        # Find the element with smallest count
+        # and randomly pick from the set of the elements with smallest count.
+        nxt = 0
+        nxtc = 5
+        w = 1
+        for a in 1:cnt[c]
+            p = adj[c, a]
+            if cnt[p] < nxtc
+                nxt = p
+                nxtc = cnt[p]
+                w = 1
+            elseif cnt[p] == nxtc
+                w += 1
+                # Current item is the result of a sample over w-1 items.
+                # Probability the next one should be selected is 1.0/w
+                if rand(Float64) < 1.0/w
+                    nxt = p
+                end
+            end
+        end
+        # Next element has been chosen!
+        c = nxt
+        dst[i] = c
+
+        # Update adjacency matrix of each neighbour
+        for ni in 1:cnt[c]
+            # Neighbour `n`
+            n = adj[c, ni]
+            # Find index of ci.
+            ci = 0
+            for b in 1:cnt[n]
+                if adj[n, b] == c
+                    ci = b
+                    break
+                end
+            end
+            # Update adjacency and count
+            if ci != 0 && cnt[n] != 0 
+                adj[n, ci] = adj[n, cnt[n]]
+                cnt[n] -= 1
+            end
+        end
+    end
+    dst
 end
