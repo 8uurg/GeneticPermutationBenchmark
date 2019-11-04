@@ -16,33 +16,6 @@ function crossover_PMX_point(dst :: Vector{Int64}, src :: Vector{Int64}, idst ::
     idst[a], idst[b] = idst[b], idst[a]
 end
 
-function crossover_PMX!(dst :: Vector{Int64}, src :: Vector{Int64}, idst :: Vector{Int64}; ring :: Bool = true)
-    # Build the inverse permutation for use as a lookup table.
-    # Effectively working as a find-city but it does need to be kept up-to-date with each swap.
-    invperm!(idst, dst)
-    # Pick two points on the string
-    ms_a, ms_b = rand(1:length(dst)), rand(1:length(dst))
-    # If not acting like a ring, do a swap if neccesary.
-    if !ring && ms_b < ms_a
-        ms_a, ms_b = ms_b, ms_a
-    end
-    # These two points from a section on the string (which is assumed to be a ring)
-    # eg. if b < a, it wraps around the end.
-    if ms_b >= ms_a
-        for i in ms_a:ms_b
-            crossover_PMX_point(dst, src, idst, i)
-        end
-    else
-        for i in ms_a:length(dst)
-            crossover_PMX_point(dst, src, idst, i)
-        end
-        for i in 1:ms_b
-            crossover_PMX_point(dst, src, idst, i)
-        end
-    end
-    return dst
-end
-
 function crossover_PMX_both!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, 
         idst1 :: Vector{Int64}, idst2 :: Vector{Int64}; ring :: Bool = true)
     n = length(parent1)
@@ -79,25 +52,7 @@ function crossover_PMX_both!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, paren
     return dst1, dst2
 end
 
-function crossover_CX!(dst :: Vector{Int64}, src :: Vector{Int64}, idst :: Vector{Int64}, isrc :: Vector{Int64})
-    # Create lookup tables for finding cycles.
-    invperm!(idst, dst)
-    invperm!(isrc, src)
-    # Get a starting point, and store it, so we know when we have found a cycle!
-    c = rand(1:length(dst))
-    # Go through the cycle, copying over elements from src.
-    i = c
-    while isrc[dst[i]] != c
-        pi = i
-        i = isrc[dst[i]]
-        dst[pi] = src[pi]
-    end
-    dst[i] = src[i]
-    
-    return dst
-end
-
-function crossover_CX_both!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64},
+function crossover_CX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64},
         idst2 :: Vector{Int64})
     n = length(parent1)
     # Offspring start of as each of the parents.
