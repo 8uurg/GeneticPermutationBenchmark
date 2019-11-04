@@ -75,10 +75,14 @@ function crossover_CX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
 end
 
 function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, 
-        seen_dst1 :: BitVector, seen_dst2 :: BitVector)
+        seen_dst1 :: BitVector, seen_dst2 :: BitVector; ring :: Bool = true)
     n = length(parent1)
     # Select crossover points
     ms_a, ms_b = rand(1:n), rand(1:n)
+    # If not acting like a ring, reorder the points.
+    if !ring && ms_a > ms_b
+        ms_a, ms_b = ms_b, ms_a
+    end
     # Keep track of which items we have seen
     fill!(seen_dst1, false)
     fill!(seen_dst2, false)
