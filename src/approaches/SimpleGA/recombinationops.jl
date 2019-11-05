@@ -3,7 +3,7 @@ function invperm!(dst :: Vector{Int64}, src :: Vector{Int64})
     @inbounds for (i, j) in enumerate(src)
         dst[j] = i
     end
-    dst
+    return #dst
 end
 
 function crossover_PMX_point(dst :: Vector{Int64}, src :: Vector{Int64}, idst :: Vector{Int64}, i :: Int64)
@@ -14,10 +14,11 @@ function crossover_PMX_point(dst :: Vector{Int64}, src :: Vector{Int64}, idst ::
     dst[i], dst[idst[a]] = dst[idst[a]], b
     # Swap the numbers in the lookup table as well.
     idst[a], idst[b] = idst[b], idst[a]
+    return
 end
 
 function crossover_PMX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64},
-        idst1 :: Vector{Int64}, idst2 :: Vector{Int64}; ring :: Bool = true)
+        idst1 :: Vector{Int64}, idst2 :: Vector{Int64}, ring :: Bool = true)
     n = length(parent1)
     #
     copy!(dst1, parent1)
@@ -49,7 +50,7 @@ function crossover_PMX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 ::
             crossover_PMX_point(dst2, parent1, idst2, i)
         end
     end
-    return dst1, dst2
+    return #dst1, dst2
 end
 
 function crossover_CX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64},
@@ -71,11 +72,11 @@ function crossover_CX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
     end
     dst1[i], dst2[i] = dst2[i], dst1[i]
 
-    return dst1, dst2
+    return #dst1, dst2
 end
 
 function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64},
-        seen_dst1 :: BitVector, seen_dst2 :: BitVector; ring :: Bool = true)
+        seen_dst1 :: BitVector, seen_dst2 :: BitVector, ring :: Bool = true)
     n = length(parent1)
     # Select crossover points
     ms_a, ms_b = rand(1:n), rand(1:n)
@@ -156,10 +157,10 @@ function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
             p2 += 1
         end
     end
-    return dst1, dst2
+    return #dst1, dst2
 end
 
-function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, adj :: Matrix{Int64}, cnt :: Vector{Int64}; ring :: Bool = true)
+function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, adj :: Matrix{Int64}, cnt :: Vector{Int64}, ring :: Bool = true)
     #
     n = length(parent1)
     # Create adjacency matrix, 2 parents = maximum of 4 adjacent elements.
@@ -168,7 +169,12 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
     fill!(adj, 0)
     @inbounds for i in 1:n
         x = parent1[i]
-        for p in (parent1, parent2)
+        for parentx in 1:2
+            if parentx == 1
+                p = parent1
+            else
+                p = parent2
+            end
             x = p[i]
             pred = p[mod((i - 1 - 1), n) + 1]
             succ = p[mod((i + 1 - 1), n) + 1]
@@ -283,7 +289,7 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
         # Mark as selected.
         cnt[c] = -1
     end
-    dst
+    return #dst
 end
 
 abstract type CrossoverOperator end
@@ -303,7 +309,7 @@ function crossover!(operator :: PMX,
                     parent1 :: Vector{Int64},
                     parent2 :: Vector{Int64})
     #
-    crossover_PMX!(offspring1, offspring2, parent1, parent2, operator.idst1, operator.idst2; ring=true)
+    crossover_PMX!(offspring1, offspring2, parent1, parent2, operator.idst1, operator.idst2, true)
 end
 
 struct CX <: CrossoverOperator
@@ -338,7 +344,7 @@ function crossover!(operator :: OX,
                     parent1 :: Vector{Int64},
                     parent2 :: Vector{Int64})
     #
-    crossover_OX!(offspring1, offspring2, parent1, parent2, operator.seen_dst1, operator.seen_dst2; ring=true)
+    crossover_OX!(offspring1, offspring2, parent1, parent2, operator.seen_dst1, operator.seen_dst2, true)
 end
 
 struct ER <: CrossoverOperator
@@ -357,7 +363,7 @@ function crossover!(operator :: ER,
                     parent2 :: Vector{Int64})
     # Two crossovers, as Edge Recombination Crossover does not really have
     # have an obvious way to obtain two 'opposite' offspring
-    crossover_ER!(offspring1, parent1, parent2, operator.adj, operator.cnt; ring=true)
-    crossover_ER!(offspring2, parent1, parent2, operator.adj, operator.cnt; ring=true)
-    (offspring1, offspring2)
+    crossover_ER!(offspring1, parent1, parent2, operator.adj, operator.cnt, true)
+    crossover_ER!(offspring2, parent1, parent2, operator.adj, operator.cnt, true)
+    return #(offspring1, offspring2)
 end
