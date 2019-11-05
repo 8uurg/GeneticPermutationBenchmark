@@ -4,6 +4,8 @@ mutable struct RKSimpleGASolution
     perm :: Vector{Float64}
     fitness :: Float64
 end
+Base.isless(a :: RKSimpleGASolution, b :: RKSimpleGASolution) = isless(a.fitness, b.fitness)
+Base.isequal(a :: RKSimpleGASolution, b :: RKSimpleGASolution) = a.perm == b.perm
 
 struct RKSimpleGA
     f :: Function

@@ -5,6 +5,8 @@ mutable struct IPSimpleGASolution
     perm :: Vector{Int64}
     fitness :: Float64
 end
+Base.isless(a :: IPSimpleGASolution, b :: IPSimpleGASolution) = isless(a.fitness, b.fitness)
+Base.isequal(a :: IPSimpleGASolution, b :: IPSimpleGASolution) = a.perm == b.perm
 
 struct IPSimpleGA{O <: CrossoverOperator}
     f :: Function
