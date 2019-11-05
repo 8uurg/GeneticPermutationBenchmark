@@ -190,6 +190,7 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
             end
         end
     end
+
     # Construct a solution. Starting from the starting point of one of the two parents
     # selected at random.
     c = rand((parent1[1], parent2[1]))
@@ -212,6 +213,8 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
             cnt[nb] -= 1
         end
     end
+    # Mark as selected
+    cnt[c] = -1
     # Do the same thing for the remaining elements
     for i in 2:n
         # Find the element with smallest count
@@ -231,6 +234,21 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
                 # Probability the next one should be selected is 1.0/w
                 if rand(Float64) < 1.0/w
                     nxt = p
+                end
+            end
+        end
+
+        # No neighbouring elements...
+        # Select an unselected one at random instead.
+        if nxt == 0
+            w = 0
+            for i in 1:n
+                if cnt[i] == -1
+                    continue
+                end
+                w += 1
+                if rand() < 1.0/w
+                    nxt = i
                 end
             end
         end
@@ -256,6 +274,8 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
                 cnt[nb] -= 1
             end
         end
+        # Mark as selected.
+        cnt[c] = -1
     end
     dst
 end
