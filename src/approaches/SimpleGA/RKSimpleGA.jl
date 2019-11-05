@@ -17,6 +17,8 @@ struct RKSimpleGA
     generations :: Ref{Int64}
     generations_no_improvement :: Ref{Int64}
 
+    converged :: Ref{Bool}
+
     # Placeholders
     offspring1 :: RKSimpleGASolution
     offspring2 :: RKSimpleGASolution
@@ -25,7 +27,7 @@ struct RKSimpleGA
         new(f, n, population,
             # Stats & Info
             Ref(maximum(population)), 
-            Ref(0), Ref(0), 
+            Ref(0), Ref(0), Ref(false),
             # Placeholders
             RKSimpleGASolution(collect(1:n), typemin(Float64)),
             RKSimpleGASolution(collect(1:n), typemin(Float64)))
@@ -35,7 +37,7 @@ struct RKSimpleGA
         best :: Ref{RKSimpleGASolution})
         best[] = max(best[], maximum(population))
         new(f, n, population,
-            best, Ref(0), Ref(0),
+            best, Ref(0), Ref(0), Ref(false),
             # Placeholders
             RKSimpleGASolution(collect(1:n), typemin(Float64)),
             RKSimpleGASolution(collect(1:n), typemin(Float64)))
@@ -109,8 +111,14 @@ function step!(ga :: RKSimpleGA)
     end
     # Update statistics
     ga.generations[] += 1
+
     if !improved_a_solution
-        ga.generations_no_improvement += 1
+        ga.generations_no_improvement[] += 1
+
+        NIS_convergence_threshold = 10 + floor(Int64, 20 * log10(length(ga.population)))
+        if ga.generations_no_improvement[] > NIS_convergence_threshold
+            ga.converged[] = true
+        end
     end
 end
 

@@ -19,6 +19,8 @@ struct IPSimpleGA{O <: CrossoverOperator}
     generations :: Ref{Int64}
     generations_no_improvement :: Ref{Int64}
 
+    converged :: Ref{Bool}
+
     # Placeholders
     offspring1 :: IPSimpleGASolution
     offspring2 :: IPSimpleGASolution
@@ -28,7 +30,7 @@ struct IPSimpleGA{O <: CrossoverOperator}
         new{O}(f, n, population, crossover, 
             # Stats & Info
             Ref(maximum(population)), 
-            Ref(0), Ref(0), 
+            Ref(0), Ref(0), Ref(false),
             # Placeholders
             IPSimpleGASolution(collect(1:n), typemin(Float64)),
             IPSimpleGASolution(collect(1:n), typemin(Float64)))
@@ -38,7 +40,7 @@ struct IPSimpleGA{O <: CrossoverOperator}
         crossover :: O, best :: Ref{IPSimpleGASolution}) where {O <: CrossoverOperator}
         best[] = max(best[], maximum(population))
         new{O}(f, n, population, crossover, 
-            best, Ref(0), Ref(0),
+            best, Ref(0), Ref(0), Ref(false),
             # Placeholders
             IPSimpleGASolution(collect(1:n), typemin(Float64)),
             IPSimpleGASolution(collect(1:n), typemin(Float64)))
@@ -98,8 +100,14 @@ function step!(ga :: IPSimpleGA)
     end
     # Update statistics
     ga.generations[] += 1
+    
     if !improved_a_solution
-        ga.generations_no_improvement += 1
+        ga.generations_no_improvement[] += 1
+        
+        NIS_convergence_threshold = 10 + floor(Int64, 20 * log10(length(ga.population)))
+        if ga.generations_no_improvement[] > NIS_convergence_threshold
+            ga.converged[] = true
+        end
     end
 end
 
@@ -153,7 +161,7 @@ function optimize_ipsimplega(crossover :: O, f :: Function, n :: Int64, t=10.0;
         # Or if all have converged. Oh well.
         if last_steps == 4 || length(mixers) == 0
             last_steps = 0
-            push!(mixers, create_ipsimplega(crossover, f, n, next_population_size, best, initial_solution_generator=initial_solution_generator))
+            push!(mixers, create_ipsimplega(f, n, next_population_size, crossover, best, initial_solution_generator=initial_solution_generator))
             next_population_size *= 2
         end
         filter!(f -> !f.converged[], mixers)
