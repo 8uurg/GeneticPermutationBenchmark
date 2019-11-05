@@ -84,3 +84,38 @@ function parse_pfs_taillard(data :: String, i :: Int64) :: PFSInstance{Int64}
     P = collect(reshape(parse.(Ref(Int64), data[9:9+n*m-1]), (n, m))')
     PFSInstance(n, m, P)
 end
+
+# Note: Visualisation
+# Requires `using Plots`.
+shape_bar(x, y, length, height) = Shape([x, x, x+length, x+length, x], [y-height/2.0, y+height-height/2.0, y+height-height/2.0, y-height/2.0, y-height/2.0])
+
+function visualize_pfs(instance :: PFSInstance{T}, permutation :: Vector{Int64}) where {T <: Real}
+    # Make sure the current completion time for each machine is zero.
+    t_machine = zeros(T, instance.n)
+    shapes_time_a = Shape[]
+    shapes_time_b = Shape[]
+
+    # Go over each job in the order of the permutation
+    for j in permutation
+        
+        # The first task of the job always completes at start + P[1, j]
+        push!(shapes_time_a, shape_bar(t_machine[1], 1, instance.P[1, j], 1))
+        t_machine[1] = t_machine[1] + instance.P[1, j]
+        # The following tasks can only start when the machine is done 
+        # /and/ the task at the previous machine is done.
+        for x in 2:instance.m
+            if t_machine[x-1] > t_machine[x]
+                push!(shapes_time_b, shape_bar(max(t_machine[x-1], t_machine[x]), x, instance.P[x, j], 1))
+            else
+                push!(shapes_time_a, shape_bar(max(t_machine[x-1], t_machine[x]), x, instance.P[x, j], 1))
+            end
+            t_machine[x] = max(t_machine[x-1], t_machine[x]) + instance.P[x, j]
+        end
+        
+    end
+
+    # The final objective is the Makespan, or Flow Time.
+    plt = plot(shapes_time_a, label="Limited by Machine", legend=:outerbottom)
+    plot!(plt, shapes_time_b, label="Limited by prev. Task of Job")
+    return plt
+end
