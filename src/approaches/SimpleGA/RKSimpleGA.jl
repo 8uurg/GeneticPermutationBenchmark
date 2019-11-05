@@ -6,8 +6,8 @@ mutable struct RKSimpleGASolution
 end
 
 struct RKSimpleGA
-    f :: Function,
-    n :: Int64,
+    f :: Function
+    n :: Int64
     population :: Vector{RKSimpleGASolution}
     # Stats & info
     best :: Ref{RKSimpleGASolution}

@@ -7,8 +7,8 @@ mutable struct IPSimpleGASolution
 end
 
 struct IPSimpleGA{O <: CrossoverOperator}
-    f :: Function,
-    n :: Int64,
+    f :: Function
+    n :: Int64
     population :: Vector{IPSimpleGASolution}
     crossover :: O
     # Stats & info
