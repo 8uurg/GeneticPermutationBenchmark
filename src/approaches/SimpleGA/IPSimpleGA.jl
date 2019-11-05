@@ -21,9 +21,9 @@ struct IPSimpleGA{O <: CrossoverOperator}
     offspring1 :: IPSimpleGASolution
     offspring2 :: IPSimpleGASolution
 
-    function IPSimpleGA{O <: CrossoverOperator}(f :: Function, n :: Int64, population :: Vector{IPSimpleGASolution},
-        crossover :: O)
-        new(f, n, population, crossover, 
+    function IPSimpleGA(f :: Function, n :: Int64, population :: Vector{IPSimpleGASolution},
+        crossover :: O) where {O <: CrossoverOperator}
+        new{O}(f, n, population, crossover, 
             # Stats & Info
             Ref(maximum(population)), 
             Ref(0), Ref(0), 
@@ -32,10 +32,10 @@ struct IPSimpleGA{O <: CrossoverOperator}
             IPSimpleGASolution(collect(1:n), typemin(Float64)))
     end
 
-    function IPSimpleGA{O <: CrossoverOperator}(f :: Function, n :: Int64, population :: Vector{IPSimpleGASolution},
-        crossover :: O, best :: Ref{IPSimpleGASolution})
+    function IPSimpleGA(f :: Function, n :: Int64, population :: Vector{IPSimpleGASolution},
+        crossover :: O, best :: Ref{IPSimpleGASolution}) where {O <: CrossoverOperator}
         best[] = max(best[], maximum(population))
-        new(f, n, population, crossover, 
+        new{O}(f, n, population, crossover, 
             best, Ref(0), Ref(0),
             # Placeholders
             IPSimpleGASolution(collect(1:n), typemin(Float64)),
