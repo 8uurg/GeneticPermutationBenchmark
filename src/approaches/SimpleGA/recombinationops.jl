@@ -304,6 +304,8 @@ function crossover!(operator :: ER,
                     offspring2 :: Vector{Int64},
                     parent1 :: Vector{Int64},
                     parent2 :: Vector{Int64})
-    #
-    crossover_ER!(offspring1, offspring2, parent1, parent2, operator.seen_dst1, operator.seen_dst2)
+    # Two crossovers, as Edge Recombination Crossover does not really have
+    # have an obvious way to obtain two 'opposite' offspring
+    crossover_ER!(offspring1, parent1, parent2, operator.adj, operator.cnt)
+    crossover_ER!(offspring2, parent1, parent2, operator.adj, operator.cnt)
 end
