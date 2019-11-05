@@ -159,7 +159,7 @@ function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
     return dst1, dst2
 end
 
-function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, adj :: Matrix{Int64}, cnt :: Vector{Int64})
+function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, adj :: Matrix{Int64}, cnt :: Vector{Int64}; ring :: Bool = true)
     #
     n = length(parent1)
     # Create adjacency matrix, 2 parents = maximum of 4 adjacent elements.
@@ -174,19 +174,25 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
             succ = p[mod((i + 1 - 1), n) + 1]
             if cnt[x] != 0
                 # Duplicate checking with found adjacent elements.
-                if pred != adj[x, 1] && pred != adj[x, 2]
+                if pred != adj[x, 1] && pred != adj[x, 2] && (ring || i != 1)
                     cnt[x] += 1
                     adj[x, cnt[x]] = pred
                 end
-                if succ != adj[x, 1] && succ != adj[x, 2]
+                if succ != adj[x, 1] && succ != adj[x, 2] && (ring || i != n)
                     cnt[x] += 1
                     adj[x, cnt[x]] = succ
                 end
             else
-                # Easy case in which we have to perform no checks.
-                cnt[x] = 2
-                adj[x, 1] = pred
-                adj[x, 2] = succ
+                # Easier case. No chance of duplicates.
+                # though we will need to account for ring behaviour.
+                if ring || i != 1
+                    cnt[x] += 1
+                    adj[x, cnt[x]] = pred
+                end
+                if ring || i != n
+                    cnt[x] += 1
+                    adj[x, cnt[x]] = succ
+                end
             end
         end
     end
@@ -351,7 +357,7 @@ function crossover!(operator :: ER,
                     parent2 :: Vector{Int64})
     # Two crossovers, as Edge Recombination Crossover does not really have
     # have an obvious way to obtain two 'opposite' offspring
-    crossover_ER!(offspring1, parent1, parent2, operator.adj, operator.cnt)
-    crossover_ER!(offspring2, parent1, parent2, operator.adj, operator.cnt)
+    crossover_ER!(offspring1, parent1, parent2, operator.adj, operator.cnt; ring=true)
+    crossover_ER!(offspring2, parent1, parent2, operator.adj, operator.cnt; ring=true)
     (offspring1, offspring2)
 end
