@@ -110,6 +110,8 @@ function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
             end
             dst2[i] = parent1[p1]
             dst1[i] = parent2[p2]
+            p1 += 1
+            p2 += 1
         end
         for i in ms_b+1:n
             # Ignore seen elements.
@@ -121,6 +123,8 @@ function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
             end
             dst2[i] = parent1[p1]
             dst1[i] = parent2[p2]
+            p1 += 1
+            p2 += 1
         end
     else
         # Copy over elements in window
@@ -138,7 +142,7 @@ function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
         end
         p1 = 1
         p2 = 1
-        for i in ms_a+1:ms_b-1
+        for i in ms_b+1:ms_a-1
             # Ignore seen elements.
             while seen_dst2[parent1[p1]]
                 p1 += 1
@@ -148,6 +152,8 @@ function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
             end
             dst2[i] = parent1[p1]
             dst1[i] = parent2[p2]
+            p1 += 1
+            p2 += 1
         end
     end
     return dst1, dst2
