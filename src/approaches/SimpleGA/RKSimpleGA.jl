@@ -1,5 +1,15 @@
 using Random
 
+function wrap_rkeys_to_permutation(f :: Function)
+    prm = collect(1:100)
+    function ev(assignment :: Vector{Float64})
+        resize!(prm, length(assignment))
+        sortperm!(prm, assignment)
+        return f(prm)
+    end
+    return ev
+end
+
 mutable struct RKSimpleGASolution
     perm :: Vector{Float64}
     fitness :: Float64
@@ -44,8 +54,8 @@ struct RKSimpleGA
     end
 end
 
-function uniform_rk_crossover!(offspring1 :: Vector{Int64}, offspring2 :: Vector{Int64},
-    parent1 :: Vector{Int64}, parent2 :: Vector{Int64}; p = 0.5)
+function uniform_rk_crossover!(offspring1 :: Vector{Float64}, offspring2 :: Vector{Float64},
+    parent1 :: Vector{Float64}, parent2 :: Vector{Float64}, p :: Float64 = 0.5)
     #
     n = length(parent1)
     # Copy over
@@ -69,11 +79,11 @@ function compare_swap!(a :: RKSimpleGASolution, b :: RKSimpleGASolution)
     return false
 end
 
-function elisist_crossover!(ga :: RKSimpleGA{O}, dst1 :: RKSimpleGASolution, dst2 :: RKSimpleGASolution) where {O}
+function elisist_crossover!(ga :: RKSimpleGA, dst1 :: RKSimpleGASolution, dst2 :: RKSimpleGASolution)
     improved_a_solution = false
     improved_best = false
     # Create offspring
-    uniform_rk_crossover!(ga.offspring1.perm, ga.offspring2.perm, dst1.perm, dst2.perm)
+    uniform_rk_crossover!(ga.offspring1.perm, ga.offspring2.perm, dst1.perm, dst2.perm, 0.5)
     # Evaluate offspring
     ga.offspring1.fitness = ga.f(ga.offspring1.perm)
     ga.offspring2.fitness = ga.f(ga.offspring2.perm)
@@ -123,7 +133,7 @@ function step!(ga :: RKSimpleGA)
 end
 
 function generate_new_RKsimplegasolution_random(f :: Function, n :: Int64)
-    perm = shuffle!(collect(1:n))
+    perm = rand(Float64, n)
     RKSimpleGASolution(perm, f(perm))
 end
 
@@ -140,11 +150,12 @@ function create_RKsimplega(f :: Function, n :: Int64, population_size :: Int64,
     end
 end
 
-function optimize_RKsimplega(f :: Function, n :: Int64, t=10.0;
+function optimize_rksimplega(fx :: Function, n :: Int64, t=10.0;
     initial_solution_generator :: Function = generate_new_RKsimplegasolution_random,
     population_size_base=4, target_fitness :: Union{Nothing, Float64} = nothing)
     #
     time_start = time()
+    f = wrap_rkeys_to_permutation(fx)
 
     next_population_size = population_size_base*2
 
@@ -180,5 +191,5 @@ function optimize_RKsimplega(f :: Function, n :: Int64, t=10.0;
         steps += 1
     end
 
-    return (best[].fitness, best[].perm)
+    return (best[].fitness, sortperm(best[].perm))
 end
