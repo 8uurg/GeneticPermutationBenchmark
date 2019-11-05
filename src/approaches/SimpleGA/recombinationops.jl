@@ -194,7 +194,26 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
     # selected at random.
     c = rand((parent1[1], parent2[1]))
     dst[1] = c
-    @inbounds for i in 2:n
+    # Update adjacency matrix of each neighbour
+    for ni in 1:cnt[c]
+        # Neighbour `n`
+        nb = adj[c, ni]
+        # Find index of ci.
+        ci = 0
+        for b in 1:cnt[nb]
+            if adj[nb, b] == c
+                ci = b
+                break
+            end
+        end
+        # Update adjacency and count
+        if ci != 0 && cnt[nb] != 0
+            adj[nb, ci] = adj[nb, cnt[nb]]
+            cnt[nb] -= 1
+        end
+    end
+    # Do the same thing for the remaining elements
+    for i in 2:n
         # Find the element with smallest count
         # and randomly pick from the set of the elements with smallest count.
         nxt = 0
@@ -222,19 +241,19 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
         # Update adjacency matrix of each neighbour
         for ni in 1:cnt[c]
             # Neighbour `n`
-            n = adj[c, ni]
+            nb = adj[c, ni]
             # Find index of ci.
             ci = 0
-            for b in 1:cnt[n]
-                if adj[n, b] == c
+            for b in 1:cnt[nb]
+                if adj[nb, b] == c
                     ci = b
                     break
                 end
             end
             # Update adjacency and count
-            if ci != 0 && cnt[n] != 0
-                adj[n, ci] = adj[n, cnt[n]]
-                cnt[n] -= 1
+            if ci != 0 && cnt[nb] != 0
+                adj[nb, ci] = adj[nb, cnt[nb]]
+                cnt[nb] -= 1
             end
         end
     end
@@ -314,4 +333,5 @@ function crossover!(operator :: ER,
     # have an obvious way to obtain two 'opposite' offspring
     crossover_ER!(offspring1, parent1, parent2, operator.adj, operator.cnt)
     crossover_ER!(offspring2, parent1, parent2, operator.adj, operator.cnt)
+    (offspring1, offspring2)
 end
