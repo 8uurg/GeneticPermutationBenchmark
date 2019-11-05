@@ -9,14 +9,14 @@ end
 function crossover_PMX_point(dst :: Vector{Int64}, src :: Vector{Int64}, idst :: Vector{Int64}, i :: Int64)
     # What numbers are we swapping
     a = src[i]
-    b = dst[i] 
+    b = dst[i]
     # Perform the swap
     dst[i], dst[idst[a]] = dst[idst[a]], b
     # Swap the numbers in the lookup table as well.
     idst[a], idst[b] = idst[b], idst[a]
 end
 
-function crossover_PMX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, 
+function crossover_PMX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64},
         idst1 :: Vector{Int64}, idst2 :: Vector{Int64}; ring :: Bool = true)
     n = length(parent1)
     #
@@ -70,11 +70,11 @@ function crossover_CX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
         dst1[pi], dst2[pi] = dst2[pi], dst1[pi]
     end
     dst1[i], dst2[i] = dst2[i], dst1[i]
-    
+
     return dst1, dst2
 end
 
-function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, 
+function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64},
         seen_dst1 :: BitVector, seen_dst2 :: BitVector; ring :: Bool = true)
     n = length(parent1)
     # Select crossover points
@@ -160,7 +160,7 @@ function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
 end
 
 function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, adj :: Matrix{Int64}, cnt :: Vector{Int64})
-    
+    #
     n = length(parent1)
     # Create adjacency matrix, 2 parents = maximum of 4 adjacent elements.
     # Predecessor and successor in a single solution are always unique. (No need to check!)
@@ -232,7 +232,7 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
                 end
             end
             # Update adjacency and count
-            if ci != 0 && cnt[n] != 0 
+            if ci != 0 && cnt[n] != 0
                 adj[n, ci] = adj[n, cnt[n]]
                 cnt[n] -= 1
             end
@@ -252,8 +252,8 @@ struct PMX <: CrossoverOperator
     end
 end
 
-function crossover!(operator :: PMX, 
-                    offspring1 :: Vector{Int64}, 
+function crossover!(operator :: PMX,
+                    offspring1 :: Vector{Int64},
                     offspring2 :: Vector{Int64},
                     parent1 :: Vector{Int64},
                     parent2 :: Vector{Int64})
@@ -269,8 +269,8 @@ struct CX <: CrossoverOperator
     end
 end
 
-function crossover!(operator :: CX, 
-                    offspring1 :: Vector{Int64}, 
+function crossover!(operator :: CX,
+                    offspring1 :: Vector{Int64},
                     offspring2 :: Vector{Int64},
                     parent1 :: Vector{Int64},
                     parent2 :: Vector{Int64})
@@ -287,8 +287,8 @@ struct OX <: CrossoverOperator
     end
 end
 
-function crossover!(operator :: OX, 
-                    offspring1 :: Vector{Int64}, 
+function crossover!(operator :: OX,
+                    offspring1 :: Vector{Int64},
                     offspring2 :: Vector{Int64},
                     parent1 :: Vector{Int64},
                     parent2 :: Vector{Int64})
@@ -305,8 +305,8 @@ struct ER <: CrossoverOperator
     end
 end
 
-function crossover!(operator :: ER, 
-                    offspring1 :: Vector{Int64}, 
+function crossover!(operator :: ER,
+                    offspring1 :: Vector{Int64},
                     offspring2 :: Vector{Int64},
                     parent1 :: Vector{Int64},
                     parent2 :: Vector{Int64})
