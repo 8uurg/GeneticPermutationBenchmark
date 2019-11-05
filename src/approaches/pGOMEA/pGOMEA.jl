@@ -305,8 +305,8 @@ function step!(pm :: PGomeaMixer)
     end
     # Calculate D -- the Dependency Matrix -- depending using the population.
     # calcD!(pm)
-    # calcD_original!(pm)
-    calcD_original_regularized!(pm)
+    calcD_original!(pm)
+    # calcD_original_regularized!(pm)
     # calcD_random!(pm)
     
     # Compute FOS using D
@@ -320,10 +320,10 @@ function step!(pm :: PGomeaMixer)
     # Filter the FOS.
     # sort!(pm.fos, by=f->length(f))
     # filter!(f -> (length(f) > 1 && length(f) < round(pm.n/12*10)), pm.fos)
-    filter!(f -> (length(f) < round(pm.n/12*10)), pm.fos)
+    # filter!(f -> (length(f) < round(pm.n/12*10)), pm.fos)
     # filter!(f -> (length(f) > 1), pm.fos)
     # filter!(f -> (length(f) > 1 && length(f) < pm.n), pm.fos)
-    # filter!(f -> (length(f) < pm.n), pm.fos)
+    filter!(f -> (length(f) < pm.n), pm.fos)
     
     # Determine Forced Improvement threshold.
     fi_threshold = typemax(Int64) # :)
