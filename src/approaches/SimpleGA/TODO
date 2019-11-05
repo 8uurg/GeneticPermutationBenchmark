@@ -4,8 +4,8 @@
 [x] order crossover (OX) operator by Davis (1985)
 [x] edge map recombination (ER) operator by Whitley, Starkweather and Fuquay (1989).
 # Actual GA's
-[ ]          Random-Key simpleGA with uniform crossover
-[ ] Integer Permutation simpleGA with partially mapped crossover (PMX) operator by Goldberg and Lingle,Jr.(1985)
-[ ] Integer Permutation simpleGA with cycle crossover (CX) operator by Oliver, Smith, and Holland (1987)
-[ ] Integer Permutation simpleGA with order crossover (OX) operator by Davis (1985)
-[ ] Integer Permutation simpleGA with edge map recombination (ER) operator by Whitley, Starkweather and Fuquay (1989).
+[x]          Random-Key simpleGA with uniform crossover
+[x] Integer Permutation simpleGA with partially mapped crossover (PMX) operator by Goldberg and Lingle,Jr.(1985)
+[x] Integer Permutation simpleGA with cycle crossover (CX) operator by Oliver, Smith, and Holland (1987)
+[x] Integer Permutation simpleGA with order crossover (OX) operator by Davis (1985)
+[x] Integer Permutation simpleGA with edge map recombination (ER) operator by Whitley, Starkweather and Fuquay (1989).
