@@ -47,8 +47,8 @@ approaches = [
         (f, n, t) -> optimize_ipsimplega(OX(n), f, n, t)),
     ("Integer Permutation (CX) SimpleGA", 
         (f, n, t) -> optimize_ipsimplega(CX(n), f, n, t)),
-    ("Integer Permutation (RE) SimpleGA", 
-        (f, n, t) -> optimize_ipsimplega(CX(n), f, n, t)),
+    ("Integer Permutation (ER) SimpleGA", 
+        (f, n, t) -> optimize_ipsimplega(ER(n), f, n, t)),
 ]
 
 if length(ARGS) >= 2
