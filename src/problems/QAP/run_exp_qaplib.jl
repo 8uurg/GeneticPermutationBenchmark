@@ -7,7 +7,7 @@ import CSV:CSV
 # Number of runs, per approach, per instance
 n_exp = 1
 # (Maximum) amount of time for each run, per instance.
-t_max = 1.0
+t_max = 5.0
 
 path_results_time = "./results/results_time.csv"
 path_instances = "./instances/qaplib/instances"
@@ -82,7 +82,7 @@ progress = Progress(length(instances)*length(approaches)*n_exp)
         postprocess_trace!(trace)
         # Dump results.
         for (time, fitness) in zip(trace.moments, trace.results)
-            push!(results_time, (instance_name, approach_name, exp_i, time, fitness))
+            push!(results_time, (instance_name, approach_name, exp_i, time, -fitness))
         end
         next!(progress)
     end
