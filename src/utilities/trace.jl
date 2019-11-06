@@ -59,7 +59,7 @@ end
 function postprocess_trace!(::Nothing)
 end
 
-function fitness_trace(f :: Function, trace :: Union{Nothing,ProgressTrace})
+function trace_bb(f :: Function, trace :: Union{Nothing,ProgressTrace})
     function rex(assignment :: Vector{Int64})
         fitness = f(assignment)
         update_trace!(trace, convert(Float64, fitness))
