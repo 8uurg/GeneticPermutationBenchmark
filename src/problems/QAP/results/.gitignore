@@ -1,0 +1,2 @@
+# Do not commit experimental results (for now)
+*.csv
