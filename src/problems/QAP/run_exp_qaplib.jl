@@ -51,6 +51,10 @@ approaches = [
         (f, n, t) -> optimize_ipsimplega(CX(n), f, n, t)),
 ]
 
+if length(ARGS) >= 2
+    approaches = approaches[parse(Int64, ARGS[1]):parse(Int64, ARGS[2])]
+end
+
 println("Reading and parsing instances")
 # Load and parse all instances.
 instances = [begin 
