@@ -328,7 +328,7 @@ function step!(pm :: PGomeaMixer)
     # Determine Forced Improvement threshold.
     fi_threshold = typemax(Int64) # :)
     allow_fi_upon_unchanged_solution = false
-    if pm.forced_improvement == :default || pm.forced_improvement == :default_sc
+    if pm.forced_improvement == :original || pm.forced_improvement == :original_sc
         fi_threshold = floor(Int64, 1+log10(length(pm.population)))
     elseif pm.forced_improvement == :extended || pm.forced_improvement == :extended_sc
         fi_threshold = 10 + 10*floor(Int64, log10(length(pm.population)))
@@ -338,7 +338,7 @@ function step!(pm :: PGomeaMixer)
     else
         error("Invalid FI strategy.")
     end
-    if pm.forced_improvement == :default_sc || pm.forced_improvement == :extended_sc ||
+    if pm.forced_improvement == :original_sc || pm.forced_improvement == :extended_sc ||
         pm.forced_improvement == :basically_none_sc || pm.forced_improvement == :none_sc
         allow_fi_upon_unchanged_solution = true
     end
@@ -414,7 +414,7 @@ end
 
 function optimize_pgomea(rf :: Function, n :: Int64, t=10.0;
     initial_solution_generator :: Function = generate_new_pgomeasolution_random,
-    population_size_base=4, crf=UPGMA(), forced_improvement :: Symbol = :default, target_fitness :: Union{Nothing, Float64} = nothing)
+    population_size_base=4, crf=UPGMA(), forced_improvement :: Symbol = :extended, target_fitness :: Union{Nothing, Float64} = nothing)
     #
     time_start = time()
     f = wrap_rkeys_to_permutation(rf)
