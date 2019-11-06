@@ -1,0 +1,4 @@
+# Do not commit instances, solutions...
+*.txt
+*.dat
+*.sln
