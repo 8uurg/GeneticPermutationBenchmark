@@ -5,11 +5,11 @@ using ProgressMeter
 import CSV:CSV
 
 # Number of runs, per approach, per instance
-n_exp = 1
+n_exp = 10
 # (Maximum) amount of time for each run, per instance.
-t_max = 5.0
+t_max = 10.0
 
-path_results_time = "./results/results_time.csv"
+path_results_time = "./results/results_time_$(ARGS[1])_$(ARGS[2]).csv"
 path_instances = "./instances/qaplib/instances"
 
 # Make sure ./results exists
@@ -69,7 +69,7 @@ results_time = DataFrame(
     [   String,    String,  Int64, Float64,    Float64], 
     [:instance, :approach, :exp_i,   :time, :objective])
 
-moments = [0.1, 0.5, 1.0, 5.0]
+moments = [0.1, 0.5, 1.0, 5.0, 10.0]
 println("Starting experiment")
 progress = Progress(length(instances)*length(approaches)*n_exp)
 @showprogress for (instance_name, instance) in instances
