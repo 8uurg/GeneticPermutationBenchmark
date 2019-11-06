@@ -17,7 +17,7 @@ struct ProgressTrace
     hitting_time :: Ref{Float64}
 
     function ProgressTrace(moments :: Vector{Float64}, target :: Float64)
-        new(time(), Ref(typemin(Float64)), zeros(length(moments)), sort(moments), Ref(1), target, Ref(typemax(Float64)))
+        new(time(), Ref(typemin(Float64)), fill(typemin(Float64), length(moments)) , sort(moments), Ref(1), target, Ref(typemax(Float64)))
     end
 end
 
