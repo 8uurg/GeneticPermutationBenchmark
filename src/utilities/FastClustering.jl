@@ -1,4 +1,5 @@
 include("./IndexSet.jl")
+using LinearAlgebra
 
 abstract type ClusteringReductionFormula end
 
@@ -50,6 +51,8 @@ function LCP!!(D :: Matrix,
                parent_idx :: Union{Nothing, Vector{Int64}} = nothing) where
                {T <: ClusteringReductionFormula, V}
     #
+    @assert issymmetric(D) "D is required to be symmetric."
+
     n = size(D, 1)
     idxsetsize = _div64(n) + 1
     inuse = trues(n)
@@ -89,7 +92,8 @@ function LCP!!(D :: Matrix,
     while !done
         # Build chain
         if length(NN_chain) == 0
-            push!(NN_chain, rand(1:n))
+            # Pick a random element to start off with.
+            push!(NN_chain, rand(findall(inuse)))
         end
         while length(NN_chain) < 3
             @inbounds push!(NN_chain, nnmasked(D, NN_chain[end], inuse))
