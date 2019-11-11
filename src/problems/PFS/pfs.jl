@@ -85,6 +85,21 @@ function parse_pfs_taillard(data :: String, i :: Int64) :: PFSInstance{Int64}
     PFSInstance(n, m, P)
 end
 
+function parse_pfs_taillard_all(data :: String) :: Vector{PFSInstance}
+    # Select instance by index
+    instance_separator = "number of jobs, number of machines, initial seed, upper bound and lower bound :"
+    taillard_instance_strings = split(data, instance_separator, keepempty=false)
+    # Parse every instance in file into a vector.
+    [begin
+        data = split(taillard_instance_string, keepempty=false)
+        n = parse(Int64, data[1]);
+        m = parse(Int64, data[2]);
+        P = collect(reshape(parse.(Ref(Int64), data[9:9+n*m-1]), (n, m))');
+        PFSInstance(n, m, P)
+    end 
+    for taillard_instance_string in taillard_instance_strings]
+end
+
 # Note: Visualisation
 # Requires `using Plots`.
 shape_bar(x, y, length, height) = Shape([x, x, x+length, x+length, x], [y-height/2.0, y+height-height/2.0, y+height-height/2.0, y-height/2.0, y-height/2.0])
