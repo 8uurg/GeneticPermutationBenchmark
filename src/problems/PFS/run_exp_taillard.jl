@@ -87,6 +87,8 @@ begin
     progress = Progress(length(instances)*length(approaches)*n_exp)
     @showprogress for (instance_name, instance) in instances
         bbf = bb_wrap_pfs(instance)
+        # Test evaluation.
+        bbf(shuffle!(collect(1:instance.n)))
         for (approach_name, optimize_approach) in approaches, exp_i in 1:n_exp
             # Perform GC for good measure.
             GC.gc()
