@@ -11,6 +11,9 @@ t_max = Inf64 # 10.0
 # (Maximum) amount of evaluations
 e_max = 10000000
 
+moments = [t_max]
+moments_eval = [e_max]
+
 path_results_time = "./results/results_time_$(ARGS[1])_$(ARGS[2]).csv"
 path_instances = "./instances/taillard/instances"
 
@@ -74,7 +77,6 @@ results_time = DataFrame(
     [   String,    String,  Int64, Float64,    Float64], 
     [:instance, :approach, :exp_i,   :time, :objective])
 
-moments = [0.1, 0.5, 1.0, 5.0, 10.0]
 begin
     println("Warming up approaches")
     bb_warmup = bb_wrap_pfs(instances[1])
@@ -93,7 +95,7 @@ begin
             # Perform GC for good measure.
             GC.gc()
             # Setup performance/time trace in black box.
-            trace = ProgressTrace(moments, 0.0)
+            trace = ProgressTrace(moments, moments_eval, 0.0)
             bbf_traced = trace_bb(bbf, trace)
             # Run experiment
             res = optimize_approach(bbf_traced, instance.n, t_max, e_max)
