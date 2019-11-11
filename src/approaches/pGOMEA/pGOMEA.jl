@@ -412,12 +412,18 @@ function create_mixer(f :: Function, n :: Int64, population_size :: Int64, force
     end
 end
 
-function optimize_pgomea(rf :: Function, n :: Int64, t=10.0;
+function optimize_pgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     initial_solution_generator :: Function = generate_new_pgomeasolution_random,
     population_size_base=4, crf=UPGMA(), forced_improvement :: Symbol = :extended, target_fitness :: Union{Nothing, Float64} = nothing)
     #
     time_start = time()
-    f = wrap_rkeys_to_permutation(rf)
+    n_evals = 0
+    
+    fx = wrap_rkeys_to_permutation(rf)
+    function f(sol :: Vector{Float64})
+        n_evals += 1
+        return fx(sol)
+    end
 
     next_population_size = population_size_base*2
 
@@ -427,7 +433,7 @@ function optimize_pgomea(rf :: Function, n :: Int64, t=10.0;
     last_steps = 0
     best = initial_mixer.best
 
-    while (time() - time_start < t) && best[].fitness != target_fitness
+    while (time() - time_start < t) && (n_evals <= e) && best[].fitness != target_fitness
 
         for i_mixer in 1:length(mixers)
             # Other steps!
