@@ -64,10 +64,10 @@ function bb_wrap_pfs(instance :: PFSInstance{T}) where {T <: Real}
 end
 
 """
-    parse_qap_qaplib(T, data :: String)
+    parse_qap_qaplib(data :: String, i :: Int64)
 
-Parse a PFS instance from Taillard and return a QAPInstance struct. Argument `i` chooses
-which instance to load.
+Parse a PFS instance from Taillard and return a QAPInstance struct. 
+Argument `i` chooses which instance to load.
 """
 function parse_pfs_taillard(data :: String, i :: Int64) :: PFSInstance{Int64}
     # Select instance by index
@@ -85,6 +85,12 @@ function parse_pfs_taillard(data :: String, i :: Int64) :: PFSInstance{Int64}
     PFSInstance(n, m, P)
 end
 
+"""
+    parse_qap_qaplib(data :: String)
+
+Parse all PFS instances from Taillard in `data` and 
+return a vector of QAPInstance structs.
+"""
 function parse_pfs_taillard_all(data :: String) :: Vector{PFSInstance}
     # Select instance by index
     instance_separator = "number of jobs, number of machines, initial seed, upper bound and lower bound :"
