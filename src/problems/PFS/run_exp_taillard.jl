@@ -14,7 +14,8 @@ e_max = 10000000
 moments = [t_max]
 moments_eval = [e_max]
 
-path_results_time = "./results/results_time_$(ARGS[1])_$(ARGS[2]).csv"
+path_results_time = "./results/results_time_$(ARGS[1])_$(ARGS[2])_time.csv"
+path_results_evals = "./results/results_time_$(ARGS[1])_$(ARGS[2])_evals.csv"
 path_instances = "./instances/taillard/instances"
 
 # Make sure ./results exists
@@ -76,6 +77,9 @@ instances = collect(Iterators.flatten(
 results_time = DataFrame(
     [   String,    String,  Int64, Float64,    Float64], 
     [:instance, :approach, :exp_i,   :time, :objective])
+results_eval = DataFrame(
+    [   String,    String,  Int64,        Int64,    Float64], 
+    [:instance, :approach, :exp_i, :evaluations, :objective])
 
 begin
     println("Warming up approaches")
@@ -105,9 +109,13 @@ begin
             for (time, fitness) in zip(trace.moments, trace.results)
                 push!(results_time, (instance_name, approach_name, exp_i, time, -fitness))
             end
+            for (evals, fitness) in zip(trace.moments_n_eval, trace.results_eval)
+                push!(results_eval, (instance_name, approach_name, exp_i, evals, -fitness))
+            end
             next!(progress)
         end
         # Store results
         results_time |> CSV.write(path_results_time)
+        results_eval |> CSV.write(path_results_evals)
     end
 end
