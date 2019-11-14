@@ -142,6 +142,7 @@ struct QGomeaMixer
     fos :: Vector{Vector{Int64}}
     # Internal config.
     forced_improvement :: Symbol
+    fos_type :: Symbol
     crf :: ClusteringReductionFormula
     repair :: Symbol
     # Stats & info
@@ -165,11 +166,12 @@ struct QGomeaMixer
         D :: Matrix{Float64},
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
+        fos_type :: Symbol,
         crf :: ClusteringReductionFormula,
         repair :: Symbol)
         #
         new(f, n, population, D, fos,
-            forced_improvement, crf, repair,
+            forced_improvement, fos_type, crf, repair,
             Ref(maximum(population)),
             Ref(0), Ref(0), Ref(false),
             collect(1:n), collect(1:n), collect(1:n), collect(1:n),
@@ -183,13 +185,14 @@ struct QGomeaMixer
         D :: Matrix{Float64},
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
+        fos_type :: Symbol,
         crf :: ClusteringReductionFormula,
         repair :: Symbol,
         best :: Ref{QGomeaSolution})
         #
         best[] = max(best[], maximum(population))
         new(f, n, population, D, fos,
-            forced_improvement, crf, repair,
+            forced_improvement, fos_type, crf, repair,
             best,
             Ref(0), Ref(0), Ref(false),
             collect(1:n), collect(1:n), collect(1:n), collect(1:n),
@@ -334,7 +337,13 @@ function calcD_original_regularized!(pm :: QGomeaMixer)
 end
 
 function calcD_random!(pm :: QGomeaMixer)
-    pm.D .= rand(size(pm.D))
+    for i in 1:pm.n
+        for j in i+1:pm.n
+            pm.D[i, j] = rand()
+            pm.D[j, i] = pm.D[i, j]
+        end
+    end
+    pm.D
 end
 
 
@@ -467,11 +476,17 @@ function step!(pm :: QGomeaMixer)
     #
     #println([a.fitness for a in sort(pm.population, rev=true)[1:10]])
     # Calculate D depending on the population.
-    calcD!(pm)
-    # calcD_original!(pm)
+    if pm.fos_type == :distance
+        calcD!(pm)
+    elseif pm.fos_type == :original
+        calcD_original!(pm)
+    elseif pm.fos_type == :random
+        calcD_random!(pm)
+    else
+        error("Unknown FOS type $(pm.fos_type)")
+    end
     # calcD_original_regularized!(pm)
     # calcD_original_invd2!(pm)
-    # calcD_random!(pm)
     # Compute FOS
     empty!(pm.fos)
     parent_idx = zeros(Int64, 2*pm.n-1)
@@ -571,7 +586,11 @@ function generate_new_qgomeasolution_bounds(bounds :: Tuple{Vector{Float64}, Vec
     return generate_new_solution
 end
 
-function create_qgomea_mixer(f :: Function, n :: Int64, population_size :: Int64, forced_improvement :: Symbol, crf :: ClusteringReductionFormula, permutation_repair :: Symbol,
+function create_qgomea_mixer(f :: Function, n :: Int64, population_size :: Int64, 
+    forced_improvement :: Symbol,
+    fos_type :: Symbol,
+    crf :: ClusteringReductionFormula,
+    permutation_repair :: Symbol,
     best :: Union{Nothing, Ref{QGomeaSolution}} = nothing;
     initial_solution_generator :: Function) :: QGomeaMixer
     # Generate initial population.
@@ -581,15 +600,20 @@ function create_qgomea_mixer(f :: Function, n :: Int64, population_size :: Int64
     fos = Vector{Vector{Int64}}()
     sizehint!(fos, 2*n)
     if best === nothing
-        return QGomeaMixer(f, n, population, D, fos, forced_improvement, crf, permutation_repair)
+        return QGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, crf, permutation_repair)
     else
-        return QGomeaMixer(f, n, population, D, fos, forced_improvement, crf, permutation_repair, best)
+        return QGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, crf, permutation_repair, best)
     end
 end
 
 function optimize_qgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     initial_solution_generator :: Function = generate_new_qgomeasolution_random,
-    population_size_base=4, crf=UPGMA(), forced_improvement :: Symbol = :extended, permutation_repair = :ox, target_fitness :: Union{Nothing, Float64} = nothing)
+    population_size_base=4, 
+    crf=UPGMA(), 
+    forced_improvement :: Symbol = :extended,
+    fos_type :: Symbol = :distance,
+    permutation_repair = :ox, 
+    target_fitness :: Union{Nothing, Float64} = nothing)
     #
     time_start = time()
     n_evals = 0
@@ -602,7 +626,7 @@ function optimize_qgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
 
     next_population_size = population_size_base*2
 
-    initial_mixer = create_qgomea_mixer(f, n, population_size_base, forced_improvement, crf, permutation_repair, initial_solution_generator=initial_solution_generator)
+    initial_mixer = create_qgomea_mixer(f, n, population_size_base, forced_improvement, fos_type, crf, permutation_repair, initial_solution_generator=initial_solution_generator)
     mixers = QGomeaMixer[initial_mixer]
     steps = 0
     last_steps = 0
@@ -626,7 +650,7 @@ function optimize_qgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
         # Or if all have converged. Oh well.
         if last_steps == 4 || length(mixers) == 0
             last_steps = 0
-            push!(mixers, create_qgomea_mixer(f, n, next_population_size, forced_improvement, crf, permutation_repair, best, initial_solution_generator=initial_solution_generator))
+            push!(mixers, create_qgomea_mixer(f, n, next_population_size, forced_improvement, fos_type, crf, permutation_repair, best, initial_solution_generator=initial_solution_generator))
             next_population_size *= 2
         end
         filter!(f -> !f.converged[], mixers)
