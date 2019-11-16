@@ -44,9 +44,10 @@ struct ProgressTrace
 
     function ProgressTrace(moments :: Vector{Float64}, moments_n_eval :: Vector{Int64}, target :: Float64)
         new(# Starting Time
-            time(), 
+            Ref(time()), 
             # Best so far
             Ref(typemin(Float64)), 
+            Ref(0),
             # Results vectors
             fill(typemin(Float64), length(moments)), # Time
             fill(typemin(Float64), length(moments)), # # evaluations
@@ -58,7 +59,7 @@ struct ProgressTrace
             target, 
             # Hitting time.
             Ref(typemax(Float64)),
-            Ref(typemax(Float64)))
+            Ref(typemax(Int64)))
     end
 end
 
@@ -93,7 +94,7 @@ function update_trace!(trace :: ProgressTrace, objective :: Float64)
         end
     end
     # Update found bin. If it still exists that is.
-    if trace.cmoment_n_eval <= length(trace.results_eval)
+    if trace.cmoment_n_eval[] <= length(trace.results_eval)
         trace.results_eval[trace.cmoment_n_eval[]] = objective
     end
     # Update hitting time statistics.
