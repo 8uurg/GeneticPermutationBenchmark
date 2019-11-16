@@ -82,19 +82,19 @@ function mix_position_pmx!(dst :: Vector{Int64}, donor :: Vector{Int64}, mask ::
     end
 end
 
-function create_differential_donor!(dst :: Vector{Int64}, orig_dst :: Vector{Int64}, orig_donor :: Vector{Int64}, mask :: Vector{Int64}; offset :: Union{Int64, Symbol} = 0)
+function create_differential_donor!(dst :: Vector{Int64}, orig_dst :: Vector{Int64}, orig_donor :: Vector{Int64}, mask :: Vector{Int64}, rng :: MersenneTwister; offset :: Union{Int64, Symbol} = 0)
     #reference = minimum((orig_donor[i],i) for i in mask)[2]
-    reference = rand(mask)
+    reference = rand(rng, mask)
     if typeof(offset) === Int64
         offsett = offset
     else
         if offset == :rand_neg1to1
-            offsett = rand(-1:1)
+            offsett = rand(rng, -1:1)
         elseif offset == :rand_difference
             a = orig_dst[reference] - orig_donor[reference]
             b = 0
             a, b = minmax(a, b)
-            offsett = rand(a:b)*rand(0:1)
+            offsett = rand(rng, a:b)*rand(rng, 0:1)
         end
     end
     for i in mask
@@ -159,6 +159,8 @@ struct QGomeaMixer
 
     bs1 :: IndexSet
     bs2 :: IndexSet
+
+    rng :: MersenneTwister
     function QGomeaMixer(
         f :: Function,
         n :: Int64,
@@ -168,14 +170,16 @@ struct QGomeaMixer
         forced_improvement :: Symbol,
         fos_type :: Symbol,
         crf :: ClusteringReductionFormula,
-        repair :: Symbol)
+        repair :: Symbol,
+        rng :: MersenneTwister)
         #
         new(f, n, population, D, fos,
             forced_improvement, fos_type, crf, repair,
             Ref(maximum(population)),
             Ref(0), Ref(0), Ref(false),
             collect(1:n), collect(1:n), collect(1:n), collect(1:n),
-            IndexSet(n), IndexSet(n))
+            IndexSet(n), IndexSet(n),
+            rng)
     end
 
     function QGomeaMixer(
@@ -188,7 +192,8 @@ struct QGomeaMixer
         fos_type :: Symbol,
         crf :: ClusteringReductionFormula,
         repair :: Symbol,
-        best :: Ref{QGomeaSolution})
+        best :: Ref{QGomeaSolution},
+        rng :: MersenneTwister)
         #
         best[] = max(best[], maximum(population))
         new(f, n, population, D, fos,
@@ -196,7 +201,8 @@ struct QGomeaMixer
             best,
             Ref(0), Ref(0), Ref(false),
             collect(1:n), collect(1:n), collect(1:n), collect(1:n),
-            IndexSet(n), IndexSet(n))
+            IndexSet(n), IndexSet(n),
+            rng)
     end
 end
 
@@ -336,10 +342,10 @@ function calcD_original_regularized!(pm :: QGomeaMixer)
     pm.D
 end
 
-function calcD_random!(pm :: QGomeaMixer)
+function calcD_random!(pm :: QGomeaMixer, rng :: MersenneTwister)
     for i in 1:pm.n
         for j in i+1:pm.n
-            pm.D[i, j] = rand()
+            pm.D[i, j] = rand(rng)
             pm.D[j, i] = pm.D[i, j]
         end
     end
@@ -370,10 +376,10 @@ function lsmixing(pm :: QGomeaMixer,
     #
     improved = false
     if shuffle_parent_child
-        shuffle!(parentChild)
+        shuffle!(pm.rng, parentChild)
     end
     for individual in pm.population
-        if rand() < 0.9
+        if rand(pm.rng) < 0.9
             continue
         end
         copyto!(pm.mixing_backup, individual.perm)
@@ -401,7 +407,7 @@ end
 function edamixing(sol :: QGomeaSolution, pm :: QGomeaMixer; shuffle_fos=true, donor_fixed :: Union{Nothing, Ref{QGomeaSolution}} = nothing)
     # Shuffle if required.
     if shuffle_fos
-        shuffle!(pm.fos)
+        shuffle!(pm.rng, pm.fos)
     end
     # Alias for convinience.
     dst = sol.perm
@@ -413,7 +419,7 @@ function edamixing(sol :: QGomeaSolution, pm :: QGomeaMixer; shuffle_fos=true, d
     # Actual mixing.
     for s in pm.fos
         if donor_fixed === nothing
-            donor_sol = rand(pm.population)
+            donor_sol = rand(pm.rng, pm.population)
         else
             donor_sol = donor_fixed[]
         end
@@ -426,7 +432,7 @@ function edamixing(sol :: QGomeaSolution, pm :: QGomeaMixer; shuffle_fos=true, d
         end
         for op in 1:2
             if op === 1
-                create_differential_donor!(pm.mixing_virtual_donor, pm.mixing_backup, donor, s,
+                create_differential_donor!(pm.mixing_virtual_donor, pm.mixing_backup, donor, s, pm.rng,
                     offset=0) #Can also be :rand_difference or :rand_neg1to1
                 if pm.repair == :ox
                     mix_position_ox!(pm.mixing_backup, pm.mixing_virtual_donor, s, pm.mixing_perm, pm.mixing_perm_2)
@@ -563,24 +569,24 @@ function step!(pm :: QGomeaMixer)
     return improved_any
 end
 
-function generate_new_qgomeasolution_random(f :: Function, n :: Int64)
-    perm = shuffle!(collect(1:n))
+function generate_new_qgomeasolution_random(f :: Function, n :: Int64, rng :: MersenneTwister)
+    perm = shuffle!(rng, collect(1:n))
     QGomeaSolution(perm, f(perm))
 end
 
 function generate_new_qgomeasolution_bounds(bounds :: Vector{Tuple{Float64, Float64}})
-    function generate_new_solution(f :: Function, n :: Int64)
+    function generate_new_solution(f :: Function, n :: Int64, rng :: MersenneTwister)
         @assert length(bounds) == n
-        perm = invperm(sortperm([rand() * (a[2]-a[1]) + a[1] for a in bounds]))
+        perm = invperm(sortperm([rand(rng) * (a[2]-a[1]) + a[1] for a in bounds]))
         QGomeaSolution(perm, f(perm))
     end
     return generate_new_solution
 end
 
 function generate_new_qgomeasolution_bounds(bounds :: Tuple{Vector{Float64}, Vector{Float64}})
-    function generate_new_solution(f :: Function, n :: Int64)
+    function generate_new_solution(f :: Function, n :: Int64, rng :: MersenneTwister)
         @assert length(bounds) == n
-        perm = invperm(sortperm([rand() * (ub-lb) + lb for (lb, ub) in zip(bounds[1], bounds[2])]))
+        perm = invperm(sortperm([rand(rng) * (ub-lb) + lb for (lb, ub) in zip(bounds[1], bounds[2])]))
         QGomeaSolution(perm, f(perm))
     end
     return generate_new_solution
@@ -591,18 +597,19 @@ function create_qgomea_mixer(f :: Function, n :: Int64, population_size :: Int64
     fos_type :: Symbol,
     crf :: ClusteringReductionFormula,
     permutation_repair :: Symbol,
-    best :: Union{Nothing, Ref{QGomeaSolution}} = nothing;
+    best :: Union{Nothing, Ref{QGomeaSolution}} = nothing,
+    rng :: MersenneTwister;
     initial_solution_generator :: Function) :: QGomeaMixer
     # Generate initial population.
-    population = [initial_solution_generator(f, n) for _ in 1:population_size]
+    population = [initial_solution_generator(f, n, rng) for _ in 1:population_size]
     # Create matrices and FoS vector.
     D = zeros(Float64, (n, n))
     fos = Vector{Vector{Int64}}()
     sizehint!(fos, 2*n)
     if best === nothing
-        return QGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, crf, permutation_repair)
+        return QGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, crf, permutation_repair, rng)
     else
-        return QGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, crf, permutation_repair, best)
+        return QGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, crf, permutation_repair, best, rng)
     end
 end
 
@@ -618,6 +625,8 @@ function optimize_qgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     time_start = time()
     n_evals = 0
 
+    rng = MersenneTwister()
+
     fx = wrap_assignment_to_permutation(rf)
     function f(sol :: Vector{Int64})
         n_evals += 1
@@ -626,7 +635,7 @@ function optimize_qgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
 
     next_population_size = population_size_base*2
 
-    initial_mixer = create_qgomea_mixer(f, n, population_size_base, forced_improvement, fos_type, crf, permutation_repair, initial_solution_generator=initial_solution_generator)
+    initial_mixer = create_qgomea_mixer(f, n, population_size_base, forced_improvement, fos_type, crf, permutation_repair, rng, initial_solution_generator=initial_solution_generator)
     mixers = QGomeaMixer[initial_mixer]
     steps = 0
     last_steps = 0
@@ -650,7 +659,7 @@ function optimize_qgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
         # Or if all have converged. Oh well.
         if last_steps == 4 || length(mixers) == 0
             last_steps = 0
-            push!(mixers, create_qgomea_mixer(f, n, next_population_size, forced_improvement, fos_type, crf, permutation_repair, best, initial_solution_generator=initial_solution_generator))
+            push!(mixers, create_qgomea_mixer(f, n, next_population_size, forced_improvement, fos_type, crf, permutation_repair, best, rng, initial_solution_generator=initial_solution_generator))
             next_population_size *= 2
         end
         filter!(f -> !f.converged[], mixers)
