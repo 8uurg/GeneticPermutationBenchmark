@@ -33,10 +33,10 @@ function mix!(dst :: Vector{Float64}, src :: Vector{Float64}, mask :: Vector{Int
     return dst
 end
 
-function reencode!(sol :: Vector{Float64}, perm :: Vector{Int64}, rk :: Vector{Float64})
+function reencode!(sol :: Vector{Float64}, perm :: Vector{Int64}, rk :: Vector{Float64}, rng :: MersenneTwister)
     # Generate new random keys
     @inbounds for i in 1:length(rk)
-        rk[i] = rand(Float64)
+        rk[i] = rand(rng, Float64)
     end
     sort!(rk)
     # Find the permutation that sorts the original keys.
@@ -50,7 +50,7 @@ function reencode!(sol :: Vector{Float64}, perm :: Vector{Int64}, rk :: Vector{F
     return sol
 end
 
-function random_rescale!(sol :: Vector{Float64}, mask :: Vector{Int64})
+function random_rescale!(sol :: Vector{Float64}, mask :: Vector{Int64}, rng :: MersenneTwister)
     # Find the minimum and maximum to rescale
     sm_min, sm_max = extrema(sol[i] for i in mask)
     sm_range = sm_max - sm_min
@@ -58,7 +58,7 @@ function random_rescale!(sol :: Vector{Float64}, mask :: Vector{Int64})
     n_intervals = length(sol)
     # Pick an interval [random_left_bracket:random_left_bracket+1/n_intervals]
     # to scale elements to.
-    random_left_bracket = rand(1:n_intervals)
+    random_left_bracket = rand(rng, 1:n_intervals)
     # Remap keys from [sm_min, sm_max] to [random_left_bracket:random_left_bracket+1/n_intervals]
     for i in mask
         sol[i] = ((sol[i] - sm_min) / sm_range) * (1.0 / n_intervals) + random_left_bracket
@@ -107,6 +107,9 @@ struct PGomeaMixer
     reencode_keys :: Vector{Float64}
     reencode_perm :: Vector{Int64}
 
+    # RNG
+    rng :: MersenneTwister
+
     function PGomeaMixer(
         f :: Function,
         n :: Int64,
@@ -115,14 +118,16 @@ struct PGomeaMixer
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
         fos_type :: Symbol,
-        crf :: ClusteringReductionFormula)
+        crf :: ClusteringReductionFormula,
+        rng :: MersenneTwister)
         #
         new(f, n, population, D, fos,
             forced_improvement, fos_type, crf,
             Ref(maximum(population)),
             Ref(0), Ref(0), Ref(false),
             collect(1:n), 
-            collect(LinRange(0.0, 1.0, n)), collect(1:n))
+            collect(LinRange(0.0, 1.0, n)), collect(1:n),
+            rng)
     end
 
     function PGomeaMixer(
@@ -134,7 +139,8 @@ struct PGomeaMixer
         forced_improvement :: Symbol,
         fos_type :: Symbol,
         crf :: ClusteringReductionFormula,
-        best :: Ref{PGomeaSolution})
+        best :: Ref{PGomeaSolution},
+        rng :: MersenneTwister)
         #
         best[] = max(best[], maximum(population))
         new(f, n, population, D, fos,
@@ -142,7 +148,8 @@ struct PGomeaMixer
             best,
             Ref(0), Ref(0), Ref(false),
             collect(1:n), 
-            collect(LinRange(0.0, 1.0, n)), collect(1:n))
+            collect(LinRange(0.0, 1.0, n)), collect(1:n),
+            rng)
     end
 end
 
@@ -222,7 +229,7 @@ end
 function calcD_random!(pm :: PGomeaMixer)
     for i in 1:pm.n
         for j in i+1:pm.n
-            pm.D[i, j] = rand()
+            pm.D[i, j] = rand(pm.rng)
             pm.D[j, i] = pm.D[i, j]
         end
     end
@@ -250,7 +257,7 @@ end
 function edamixing(sol :: PGomeaSolution, pm :: PGomeaMixer; shuffle_fos=true, donor_fixed :: Union{Nothing, Ref{PGomeaSolution}} = nothing)
     # Shuffle if required.
     if shuffle_fos
-        shuffle!(pm.fos)
+        shuffle!(pm.rng, pm.fos)
     end
     # Alias for convinience.
     dst = sol.perm
@@ -262,7 +269,7 @@ function edamixing(sol :: PGomeaSolution, pm :: PGomeaMixer; shuffle_fos=true, d
     # Actual mixing.
     for s in pm.fos
         if donor_fixed === nothing
-            donor_sol = rand(pm.population)
+            donor_sol = rand(pm.rng, pm.population)
         else
             donor_sol = donor_fixed[]
         end
@@ -276,8 +283,8 @@ function edamixing(sol :: PGomeaSolution, pm :: PGomeaMixer; shuffle_fos=true, d
 
         mix!(pm.mixing_backup, donor, s)
 
-        if rand() < 0.1
-            random_rescale!(pm.mixing_backup, s)
+        if rand(pm.rng) < 0.1
+            random_rescale!(pm.mixing_backup, s, pm.rng)
         end
         
         if pm.mixing_backup == dst
@@ -310,7 +317,7 @@ end
 function step!(pm :: PGomeaMixer)
     # Re-encode population
     for p in pm.population
-        reencode!(p.perm, pm.reencode_perm, pm.reencode_keys)
+        reencode!(p.perm, pm.reencode_perm, pm.reencode_keys, pm.rng)
     end
     # Calculate D -- the Dependency Matrix -- depending using the population.
     if pm.fos_type == :distance
@@ -388,24 +395,24 @@ function step!(pm :: PGomeaMixer)
     return improved_any
 end
 
-function generate_new_pgomeasolution_random(f :: Function, n :: Int64)
-    perm = rand(Float64, n)
+function generate_new_pgomeasolution_random(f :: Function, n :: Int64, rng :: MersenneTwister)
+    perm = rand(rng, Float64, n)
     PGomeaSolution(perm, f(perm))
 end
 
 function generate_new_pgomeasolution_bounds(bounds :: Vector{Tuple{Float64, Float64}})
-    function generate_new_solution(f :: Function, n :: Int64)
+    function generate_new_solution(f :: Function, n :: Int64, rng :: MersenneTwister)
         @assert length(bounds) == n
-        perm = [rand() * (a[2]-a[1]) + a[1] for a in bounds]
+        perm = [rand(rng) * (a[2]-a[1]) + a[1] for a in bounds]
         PGomeaSolution(perm, f(perm))
     end
     return generate_new_solution
 end
 
 function generate_new_pgomeasolution_bounds(bounds :: Tuple{Vector{Float64}, Vector{Float64}})
-    function generate_new_solution(f :: Function, n :: Int64)
+    function generate_new_solution(f :: Function, n :: Int64, rng :: MersenneTwister)
         @assert length(bounds) == n
-        perm = invperm(sortperm([rand() * (ub-lb) + lb for (lb, ub) in zip(bounds[1], bounds[2])]))
+        perm = invperm(sortperm([rand(rng) * (ub-lb) + lb for (lb, ub) in zip(bounds[1], bounds[2])]))
         PGomeaSolution(perm, f(perm))
     end
     return generate_new_solution
@@ -415,18 +422,19 @@ function create_mixer(f :: Function, n :: Int64, population_size :: Int64,
     forced_improvement :: Symbol,
     fos_type :: Symbol,
     crf :: ClusteringReductionFormula,
-    best :: Union{Nothing, Ref{PGomeaSolution}} = nothing;
+    best :: Union{Nothing, Ref{PGomeaSolution}} = nothing,
+    rng :: MersenneTwister;
     initial_solution_generator :: Function) :: PGomeaMixer
     # Generate initial population.
-    population = [initial_solution_generator(f, n) for _ in 1:population_size]
+    population = [initial_solution_generator(f, n, rng) for _ in 1:population_size]
     # Create matrices and FoS vector.
     D = zeros(Float64, (n, n))
     fos = Vector{Vector{Int64}}()
     sizehint!(fos, 2*n)
     if best === nothing
-        return PGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, crf)
+        return PGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, crf, rng)
     else
-        return PGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, crf, best)
+        return PGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, crf, best, rng)
     end
 end
 
@@ -440,6 +448,8 @@ function optimize_pgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     #
     time_start = time()
     n_evals = 0
+
+    rng = MersenneTwister()
     
     fx = wrap_rkeys_to_permutation(rf)
     function f(sol :: Vector{Float64})
@@ -449,7 +459,7 @@ function optimize_pgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
 
     next_population_size = population_size_base*2
 
-    initial_mixer = create_mixer(f, n, population_size_base, forced_improvement, fos_type, crf, initial_solution_generator=initial_solution_generator)
+    initial_mixer = create_mixer(f, n, population_size_base, forced_improvement, fos_type, crf, rng, initial_solution_generator=initial_solution_generator)
     mixers = PGomeaMixer[initial_mixer]
     steps = 0
     last_steps = 0
@@ -473,7 +483,7 @@ function optimize_pgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
         # Or if all have converged. Oh well.
         if last_steps == 4 || length(mixers) == 0
             last_steps = 0
-            push!(mixers, create_mixer(f, n, next_population_size, forced_improvement, fos_type, crf, best, initial_solution_generator=initial_solution_generator))
+            push!(mixers, create_mixer(f, n, next_population_size, forced_improvement, fos_type, crf, best, rng, initial_solution_generator=initial_solution_generator))
             next_population_size *= 2
         end
         filter!(f -> !f.converged[], mixers)
