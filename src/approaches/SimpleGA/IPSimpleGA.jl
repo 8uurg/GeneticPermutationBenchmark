@@ -121,8 +121,8 @@ function generate_new_ipsimplegasolution_random(f :: Function, n :: Int64, rng :
 end
 
 function create_ipsimplega(f :: Function, n :: Int64, population_size :: Int64, crossover :: O,
-    best :: Union{Nothing, Ref{IPSimpleGASolution}} = nothing,
-    rng :: MersenneTwister;
+    rng :: MersenneTwister,
+    best :: Union{Nothing, Ref{IPSimpleGASolution}} = nothing;
     initial_solution_generator :: Function) :: IPSimpleGA where {O <: CrossoverOperator}
     # Generate initial population.
     population = [initial_solution_generator(f, n, rng) for _ in 1:population_size]
@@ -174,7 +174,7 @@ function optimize_ipsimplega(crossover :: O, fx :: Function, n :: Int64, t=10.0,
         # Or if all have converged. Oh well.
         if last_steps == 4 || length(mixers) == 0
             last_steps = 0
-            push!(mixers, create_ipsimplega(f, n, next_population_size, crossover, best, rng, initial_solution_generator=initial_solution_generator))
+            push!(mixers, create_ipsimplega(f, n, next_population_size, crossover, rng, best, initial_solution_generator=initial_solution_generator))
             next_population_size *= 2
         end
         filter!(f -> !f.converged[], mixers)

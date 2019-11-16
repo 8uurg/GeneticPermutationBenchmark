@@ -60,7 +60,7 @@ struct RKSimpleGA
 end
 
 function uniform_rk_crossover!(offspring1 :: Vector{Float64}, offspring2 :: Vector{Float64},
-    parent1 :: Vector{Float64}, parent2 :: Vector{Float64}, p :: Float64 = 0.5, rng :: MersenneTwister)
+    parent1 :: Vector{Float64}, parent2 :: Vector{Float64}, rng :: MersenneTwister, p :: Float64 = 0.5)
     #
     n = length(parent1)
     # Copy over
@@ -88,7 +88,7 @@ function elisist_crossover!(ga :: RKSimpleGA, dst1 :: RKSimpleGASolution, dst2 :
     improved_a_solution = false
     improved_best = false
     # Create offspring
-    uniform_rk_crossover!(ga.offspring1.perm, ga.offspring2.perm, dst1.perm, dst2.perm, 0.5, ga.rng)
+    uniform_rk_crossover!(ga.offspring1.perm, ga.offspring2.perm, dst1.perm, dst2.perm, ga.rng, 0.5)
     # Evaluate offspring
     ga.offspring1.fitness = ga.f(ga.offspring1.perm)
     ga.offspring2.fitness = ga.f(ga.offspring2.perm)
@@ -143,8 +143,8 @@ function generate_new_RKsimplegasolution_random(f :: Function, n :: Int64, rng :
 end
 
 function create_RKsimplega(f :: Function, n :: Int64, population_size :: Int64,
-    best :: Union{Nothing, Ref{RKSimpleGASolution}} = nothing,
-    rng :: MersenneTwister;
+    rng :: MersenneTwister,
+    best :: Union{Nothing, Ref{RKSimpleGASolution}} = nothing;
     initial_solution_generator :: Function) :: RKSimpleGA
     # Generate initial population.
     population = [initial_solution_generator(f, n, rng) for _ in 1:population_size]
@@ -197,7 +197,7 @@ function optimize_rksimplega(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64
         # Or if all have converged. Oh well.
         if last_steps == 4 || length(mixers) == 0
             last_steps = 0
-            push!(mixers, create_RKsimplega(f, n, next_population_size, best, rng, initial_solution_generator=initial_solution_generator))
+            push!(mixers, create_RKsimplega(f, n, next_population_size, rng, best, initial_solution_generator=initial_solution_generator))
             next_population_size *= 2
         end
         filter!(f -> !f.converged[], mixers)

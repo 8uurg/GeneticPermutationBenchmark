@@ -422,8 +422,8 @@ function create_mixer(f :: Function, n :: Int64, population_size :: Int64,
     forced_improvement :: Symbol,
     fos_type :: Symbol,
     crf :: ClusteringReductionFormula,
-    best :: Union{Nothing, Ref{PGomeaSolution}} = nothing,
-    rng :: MersenneTwister;
+    rng :: MersenneTwister,
+    best :: Union{Nothing, Ref{PGomeaSolution}} = nothing;
     initial_solution_generator :: Function) :: PGomeaMixer
     # Generate initial population.
     population = [initial_solution_generator(f, n, rng) for _ in 1:population_size]
@@ -483,7 +483,7 @@ function optimize_pgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
         # Or if all have converged. Oh well.
         if last_steps == 4 || length(mixers) == 0
             last_steps = 0
-            push!(mixers, create_mixer(f, n, next_population_size, forced_improvement, fos_type, crf, best, rng, initial_solution_generator=initial_solution_generator))
+            push!(mixers, create_mixer(f, n, next_population_size, forced_improvement, fos_type, crf, rng, best, initial_solution_generator=initial_solution_generator))
             next_population_size *= 2
         end
         filter!(f -> !f.converged[], mixers)
