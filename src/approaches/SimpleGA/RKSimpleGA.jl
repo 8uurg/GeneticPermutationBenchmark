@@ -33,29 +33,34 @@ struct RKSimpleGA
     offspring1 :: RKSimpleGASolution
     offspring2 :: RKSimpleGASolution
 
-    function RKSimpleGA(f :: Function, n :: Int64, population :: Vector{RKSimpleGASolution})
+    rng :: MersenneTwister
+
+    function RKSimpleGA(f :: Function, n :: Int64, population :: Vector{RKSimpleGASolution},
+            rng :: MersenneTwister)
         new(f, n, population,
             # Stats & Info
             Ref(maximum(population)), 
             Ref(0), Ref(0), Ref(false),
             # Placeholders
             RKSimpleGASolution(collect(1:n), typemin(Float64)),
-            RKSimpleGASolution(collect(1:n), typemin(Float64)))
+            RKSimpleGASolution(collect(1:n), typemin(Float64)),
+            rng)
     end
 
     function RKSimpleGA(f :: Function, n :: Int64, population :: Vector{RKSimpleGASolution},
-        best :: Ref{RKSimpleGASolution})
+        best :: Ref{RKSimpleGASolution}, rng :: MersenneTwister)
         best[] = max(best[], maximum(population))
         new(f, n, population,
             best, Ref(0), Ref(0), Ref(false),
             # Placeholders
             RKSimpleGASolution(collect(1:n), typemin(Float64)),
-            RKSimpleGASolution(collect(1:n), typemin(Float64)))
+            RKSimpleGASolution(collect(1:n), typemin(Float64)),
+            rng)
     end
 end
 
 function uniform_rk_crossover!(offspring1 :: Vector{Float64}, offspring2 :: Vector{Float64},
-    parent1 :: Vector{Float64}, parent2 :: Vector{Float64}, p :: Float64 = 0.5)
+    parent1 :: Vector{Float64}, parent2 :: Vector{Float64}, p :: Float64 = 0.5, rng :: MersenneTwister)
     #
     n = length(parent1)
     # Copy over
@@ -63,7 +68,7 @@ function uniform_rk_crossover!(offspring1 :: Vector{Float64}, offspring2 :: Vect
     copy!(offspring2, parent2)
     # Crossover
     @inbounds for i in 1:n
-        if rand() < p
+        if rand(rng) < p
             offspring1[i], offspring2[i] = offspring2[i], offspring1[i]
         end
     end
@@ -83,7 +88,7 @@ function elisist_crossover!(ga :: RKSimpleGA, dst1 :: RKSimpleGASolution, dst2 :
     improved_a_solution = false
     improved_best = false
     # Create offspring
-    uniform_rk_crossover!(ga.offspring1.perm, ga.offspring2.perm, dst1.perm, dst2.perm, 0.5)
+    uniform_rk_crossover!(ga.offspring1.perm, ga.offspring2.perm, dst1.perm, dst2.perm, 0.5, ga.rng)
     # Evaluate offspring
     ga.offspring1.fitness = ga.f(ga.offspring1.perm)
     ga.offspring2.fitness = ga.f(ga.offspring2.perm)
@@ -132,21 +137,22 @@ function step!(ga :: RKSimpleGA)
     end
 end
 
-function generate_new_RKsimplegasolution_random(f :: Function, n :: Int64)
-    perm = rand(Float64, n)
+function generate_new_RKsimplegasolution_random(f :: Function, n :: Int64, rng :: MersenneTwister)
+    perm = rand(rng, Float64, n)
     RKSimpleGASolution(perm, f(perm))
 end
 
 function create_RKsimplega(f :: Function, n :: Int64, population_size :: Int64,
-    best :: Union{Nothing, Ref{RKSimpleGASolution}} = nothing;
+    best :: Union{Nothing, Ref{RKSimpleGASolution}} = nothing,
+    rng :: MersenneTwister;
     initial_solution_generator :: Function) :: RKSimpleGA
     # Generate initial population.
-    population = [initial_solution_generator(f, n) for _ in 1:population_size]
+    population = [initial_solution_generator(f, n, rng) for _ in 1:population_size]
     #
     if best === nothing
-        return RKSimpleGA(f, n, population)
+        return RKSimpleGA(f, n, population, rng)
     else
-        return RKSimpleGA(f, n, population, best)
+        return RKSimpleGA(f, n, population, best, rng)
     end
 end
 
@@ -157,6 +163,8 @@ function optimize_rksimplega(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64
     time_start = time()
     n_evals = 0
 
+    rng = MersenneTwister()
+
     fx = wrap_rkeys_to_permutation(rf)
     function f(sol :: Vector{Float64})
         n_evals += 1
@@ -165,7 +173,7 @@ function optimize_rksimplega(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64
 
     next_population_size = population_size_base*2
 
-    initial_mixer = create_RKsimplega(f, n, population_size_base, initial_solution_generator=initial_solution_generator)
+    initial_mixer = create_RKsimplega(f, n, population_size_base, rng, initial_solution_generator=initial_solution_generator)
     mixers = RKSimpleGA[initial_mixer]
     steps = 0
     last_steps = 0
@@ -189,7 +197,7 @@ function optimize_rksimplega(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64
         # Or if all have converged. Oh well.
         if last_steps == 4 || length(mixers) == 0
             last_steps = 0
-            push!(mixers, create_RKsimplega(f, n, next_population_size, best, initial_solution_generator=initial_solution_generator))
+            push!(mixers, create_RKsimplega(f, n, next_population_size, best, rng, initial_solution_generator=initial_solution_generator))
             next_population_size *= 2
         end
         filter!(f -> !f.converged[], mixers)
