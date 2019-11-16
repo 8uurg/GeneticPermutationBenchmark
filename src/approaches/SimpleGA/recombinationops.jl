@@ -18,7 +18,7 @@ function crossover_PMX_point(dst :: Vector{Int64}, src :: Vector{Int64}, idst ::
 end
 
 function crossover_PMX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64},
-        idst1 :: Vector{Int64}, idst2 :: Vector{Int64}, ring :: Bool = true)
+        idst1 :: Vector{Int64}, idst2 :: Vector{Int64}, rng :: MersenneTwister, ring :: Bool = true)
     n = length(parent1)
     #
     copy!(dst1, parent1)
@@ -28,7 +28,7 @@ function crossover_PMX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 ::
     invperm!(idst1, dst1)
     invperm!(idst2, dst2)
     # Pick two points on the string
-    ms_a, ms_b = rand(1:n), rand(1:n)
+    ms_a, ms_b = rand(rng, 1:n), rand(rng, 1:n)
     # If not acting like a ring, do a swap if neccesary.
     if !ring && ms_b < ms_a
         ms_a, ms_b = ms_b, ms_a
@@ -54,7 +54,7 @@ function crossover_PMX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 ::
 end
 
 function crossover_CX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64},
-        idst2 :: Vector{Int64})
+        idst2 :: Vector{Int64}, rng :: MersenneTwister)
     n = length(parent1)
     # Offspring start of as each of the parents.
     copy!(dst1, parent1)
@@ -62,7 +62,7 @@ function crossover_CX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
     # Create lookup table for finding cycles.
     invperm!(idst2, dst2)
     # Get a starting point, and store it, so we know when we have found a cycle!
-    c = rand(1:n)
+    c = rand(rng, 1:n)
     # Go through the cycle, copying over elements from src.
     i = c
     while idst2[dst1[i]] != c
@@ -76,10 +76,10 @@ function crossover_CX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
 end
 
 function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64},
-        seen_dst1 :: BitVector, seen_dst2 :: BitVector, ring :: Bool = true)
+        seen_dst1 :: BitVector, seen_dst2 :: BitVector, rng :: MersenneTwister, ring :: Bool = true)
     n = length(parent1)
     # Select crossover points
-    ms_a, ms_b = rand(1:n), rand(1:n)
+    ms_a, ms_b = rand(rng, 1:n), rand(rng, 1:n)
     # If not acting like a ring, reorder the points.
     if !ring && ms_a > ms_b
         ms_a, ms_b = ms_b, ms_a
@@ -160,7 +160,7 @@ function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
     return #dst1, dst2
 end
 
-function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, adj :: Matrix{Int64}, cnt :: Vector{Int64}, ring :: Bool = true)
+function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, adj :: Matrix{Int64}, cnt :: Vector{Int64}, rng :: MersenneTwister, ring :: Bool = true)
     #
     n = length(parent1)
     # Create adjacency matrix, 2 parents = maximum of 4 adjacent elements.
@@ -205,7 +205,7 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
 
     # Construct a solution. Starting from the starting point of one of the two parents
     # selected at random.
-    c = rand((parent1[1], parent2[1]))
+    c = rand(rng, (parent1[1], parent2[1]))
     dst[1] = c
     # Update adjacency matrix of each neighbour
     for ni in 1:cnt[c]
@@ -244,7 +244,7 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
                 w += 1
                 # Current item is the result of a sample over w-1 items.
                 # Probability the next one should be selected is 1.0/w
-                if rand(Float64) < 1.0/w
+                if rand(rng, Float64) < 1.0/w
                     nxt = p
                 end
             end
@@ -259,7 +259,7 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
                     continue
                 end
                 w += 1
-                if rand() < 1.0/w
+                if rand(rng) < 1.0/w
                     nxt = i
                 end
             end
@@ -307,9 +307,10 @@ function crossover!(operator :: PMX,
                     offspring1 :: Vector{Int64},
                     offspring2 :: Vector{Int64},
                     parent1 :: Vector{Int64},
-                    parent2 :: Vector{Int64})
+                    parent2 :: Vector{Int64},
+                    rng :: MersenneTwister)
     #
-    crossover_PMX!(offspring1, offspring2, parent1, parent2, operator.idst1, operator.idst2, true)
+    crossover_PMX!(offspring1, offspring2, parent1, parent2, operator.idst1, operator.idst2, rng, true)
 end
 
 struct CX <: CrossoverOperator
@@ -324,9 +325,10 @@ function crossover!(operator :: CX,
                     offspring1 :: Vector{Int64},
                     offspring2 :: Vector{Int64},
                     parent1 :: Vector{Int64},
-                    parent2 :: Vector{Int64})
+                    parent2 :: Vector{Int64},
+                    rng :: MersenneTwister)
     #
-    crossover_CX!(offspring1, offspring2, parent1, parent2, operator.idst2)
+    crossover_CX!(offspring1, offspring2, parent1, parent2, operator.idst2, rng)
 end
 
 struct OX <: CrossoverOperator
@@ -342,9 +344,10 @@ function crossover!(operator :: OX,
                     offspring1 :: Vector{Int64},
                     offspring2 :: Vector{Int64},
                     parent1 :: Vector{Int64},
-                    parent2 :: Vector{Int64})
+                    parent2 :: Vector{Int64},
+                    rng :: MersenneTwister)
     #
-    crossover_OX!(offspring1, offspring2, parent1, parent2, operator.seen_dst1, operator.seen_dst2, true)
+    crossover_OX!(offspring1, offspring2, parent1, parent2, operator.seen_dst1, operator.seen_dst2, rng, true)
 end
 
 struct ER <: CrossoverOperator
@@ -360,10 +363,11 @@ function crossover!(operator :: ER,
                     offspring1 :: Vector{Int64},
                     offspring2 :: Vector{Int64},
                     parent1 :: Vector{Int64},
-                    parent2 :: Vector{Int64})
+                    parent2 :: Vector{Int64},
+                    rng :: MersenneTwister)
     # Two crossovers, as Edge Recombination Crossover does not really have
     # have an obvious way to obtain two 'opposite' offspring
-    crossover_ER!(offspring1, parent1, parent2, operator.adj, operator.cnt, true)
-    crossover_ER!(offspring2, parent1, parent2, operator.adj, operator.cnt, true)
+    crossover_ER!(offspring1, parent1, parent2, operator.adj, operator.cnt, rng, true)
+    crossover_ER!(offspring2, parent1, parent2, operator.adj, operator.cnt, rng, true)
     return #(offspring1, offspring2)
 end

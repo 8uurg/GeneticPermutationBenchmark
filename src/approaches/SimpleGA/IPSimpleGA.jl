@@ -25,25 +25,29 @@ struct IPSimpleGA{O <: CrossoverOperator}
     offspring1 :: IPSimpleGASolution
     offspring2 :: IPSimpleGASolution
 
+    rng :: MersenneTwister
+
     function IPSimpleGA(f :: Function, n :: Int64, population :: Vector{IPSimpleGASolution},
-        crossover :: O) where {O <: CrossoverOperator}
+        crossover :: O, rng :: MersenneTwister) where {O <: CrossoverOperator}
         new{O}(f, n, population, crossover, 
             # Stats & Info
             Ref(maximum(population)), 
             Ref(0), Ref(0), Ref(false),
             # Placeholders
             IPSimpleGASolution(collect(1:n), typemin(Float64)),
-            IPSimpleGASolution(collect(1:n), typemin(Float64)))
+            IPSimpleGASolution(collect(1:n), typemin(Float64)),
+            rng)
     end
 
     function IPSimpleGA(f :: Function, n :: Int64, population :: Vector{IPSimpleGASolution},
-        crossover :: O, best :: Ref{IPSimpleGASolution}) where {O <: CrossoverOperator}
+        crossover :: O, best :: Ref{IPSimpleGASolution}, rng :: MersenneTwister) where {O <: CrossoverOperator}
         best[] = max(best[], maximum(population))
         new{O}(f, n, population, crossover, 
             best, Ref(0), Ref(0), Ref(false),
             # Placeholders
             IPSimpleGASolution(collect(1:n), typemin(Float64)),
-            IPSimpleGASolution(collect(1:n), typemin(Float64)))
+            IPSimpleGASolution(collect(1:n), typemin(Float64)),
+            rng)
     end
 end
 
@@ -58,11 +62,11 @@ function compare_swap!(a :: IPSimpleGASolution, b :: IPSimpleGASolution)
     return false
 end
 
-function elisist_crossover!(ga :: IPSimpleGA{O}, dst1 :: IPSimpleGASolution, dst2 :: IPSimpleGASolution) where {O}
+function elitist_crossover!(ga :: IPSimpleGA{O}, dst1 :: IPSimpleGASolution, dst2 :: IPSimpleGASolution) where {O}
     improved_a_solution = false
     improved_best = false
     # Create offspring
-    crossover!(ga.crossover, ga.offspring1.perm, ga.offspring2.perm, dst1.perm, dst2.perm)
+    crossover!(ga.crossover, ga.offspring1.perm, ga.offspring2.perm, dst1.perm, dst2.perm, ga.rng)
     # Evaluate offspring
     ga.offspring1.fitness = ga.f(ga.offspring1.perm)
     ga.offspring2.fitness = ga.f(ga.offspring2.perm)
@@ -90,11 +94,11 @@ function step!(ga :: IPSimpleGA)
     improved_a_solution = false
     improved_best = false
     # Shuffle the population.
-    shuffle!(ga.population)
+    shuffle!(ga.rng, ga.population)
     # Perform crossovers
     for i in 1:2:length(ga.population)-1
         improved_a_solution_cc, improved_best_cc =
-            elisist_crossover!(ga, ga.population[i], ga.population[i+1])
+            elitist_crossover!(ga, ga.population[i], ga.population[i+1])
         improved_a_solution |= improved_a_solution_cc
         improved_best |= improved_best_cc
     end
@@ -111,21 +115,22 @@ function step!(ga :: IPSimpleGA)
     end
 end
 
-function generate_new_ipsimplegasolution_random(f :: Function, n :: Int64)
-    perm = shuffle!(collect(1:n))
+function generate_new_ipsimplegasolution_random(f :: Function, n :: Int64, rng :: MersenneTwister)
+    perm = shuffle!(rng, collect(1:n))
     IPSimpleGASolution(perm, f(perm))
 end
 
 function create_ipsimplega(f :: Function, n :: Int64, population_size :: Int64, crossover :: O,
-    best :: Union{Nothing, Ref{IPSimpleGASolution}} = nothing;
+    best :: Union{Nothing, Ref{IPSimpleGASolution}} = nothing,
+    rng :: MersenneTwister;
     initial_solution_generator :: Function) :: IPSimpleGA where {O <: CrossoverOperator}
     # Generate initial population.
-    population = [initial_solution_generator(f, n) for _ in 1:population_size]
+    population = [initial_solution_generator(f, n, rng) for _ in 1:population_size]
     #
     if best === nothing
-        return IPSimpleGA(f, n, population, crossover)
+        return IPSimpleGA(f, n, population, crossover, rng)
     else
-        return IPSimpleGA(f, n, population, crossover, best)
+        return IPSimpleGA(f, n, population, crossover, best, rng)
     end
 end
 
@@ -136,6 +141,8 @@ function optimize_ipsimplega(crossover :: O, fx :: Function, n :: Int64, t=10.0,
     time_start = time()
     n_evals = 0
 
+    rng = MersenneTwister()
+
     function f(sol :: Vector{Int64})
         n_evals += 1
         return fx(sol)
@@ -143,7 +150,7 @@ function optimize_ipsimplega(crossover :: O, fx :: Function, n :: Int64, t=10.0,
 
     next_population_size = population_size_base*2
 
-    initial_mixer = create_ipsimplega(f, n, population_size_base, crossover, initial_solution_generator=initial_solution_generator)
+    initial_mixer = create_ipsimplega(f, n, population_size_base, crossover, rng, initial_solution_generator=initial_solution_generator)
     mixers = IPSimpleGA[initial_mixer]
     steps = 0
     last_steps = 0
@@ -167,7 +174,7 @@ function optimize_ipsimplega(crossover :: O, fx :: Function, n :: Int64, t=10.0,
         # Or if all have converged. Oh well.
         if last_steps == 4 || length(mixers) == 0
             last_steps = 0
-            push!(mixers, create_ipsimplega(f, n, next_population_size, crossover, best, initial_solution_generator=initial_solution_generator))
+            push!(mixers, create_ipsimplega(f, n, next_population_size, crossover, best, rng, initial_solution_generator=initial_solution_generator))
             next_population_size *= 2
         end
         filter!(f -> !f.converged[], mixers)
