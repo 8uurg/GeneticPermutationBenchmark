@@ -342,10 +342,10 @@ function calcD_original_regularized!(pm :: QGomeaMixer)
     pm.D
 end
 
-function calcD_random!(pm :: QGomeaMixer, rng :: MersenneTwister)
+function calcD_random!(pm :: QGomeaMixer)
     for i in 1:pm.n
         for j in i+1:pm.n
-            pm.D[i, j] = rand(rng)
+            pm.D[i, j] = rand(pm.rng)
             pm.D[j, i] = pm.D[i, j]
         end
     end
