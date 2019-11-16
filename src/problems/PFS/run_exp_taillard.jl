@@ -7,11 +7,12 @@ using Random
 # Note: Set JULIA_NUM_THREADS to the amount of threads to use.
 
 # Number of runs, per approach, per instance
-n_exp = 1#10
-# (Maximum) amount of time for each run, per instance.
-t_max = 1.0# Inf64 # 10.0
+n_exp = 10
+# (Maximum) amount of time for each run, per instance in seconds.
+t_max = 10.0
 # (Maximum) amount of evaluations
 e_max = typemax(Int64) # 10000000
+# Sidenote: An approach can converge and not use up the evaluations.
 
 moments = [t_max]
 moments_eval = [e_max]
@@ -50,16 +51,53 @@ include("../../approaches/SimpleGA/RKSimpleGA.jl")
 
 # And set them up
 approaches = [
-    ("Permutation GOMEA", (f, n, t, e) -> optimize_pgomea(f, n, t, e)),
-    ("qGOMEA", (f, n, t, e) -> optimize_qgomea(f, n, t, e)),
+    # Permutation GOMEA
+    # ("Permutation GOMEA - LT/Original - 1x FI", 
+    #     (f, n, t, e) -> optimize_pgomea(f, n, t, e, forced_improvement = :original)),
+    ("Permutation GOMEA - LT/Original - 10x FI", 
+        (f, n, t, e) -> optimize_pgomea(f, n, t, e, forced_improvement = :extended)),
+    # ("Permutation GOMEA - LT/Original - No FI", 
+    #     (f, n, t, e) -> optimize_pgomea(f, n, t, e, forced_improvement = :none)),
+    # ("Permutation GOMEA - RT - 1x FI", 
+    #     (f, n, t, e) -> optimize_pgomea(f, n, t, e, forced_improvement = :original, fos_type=:random)),
+    ("Permutation GOMEA - RT - 10x FI", 
+        (f, n, t, e) -> optimize_pgomea(f, n, t, e, forced_improvement = :extended, fos_type=:random)),
+    # ("Permutation GOMEA - RT - No FI", 
+    #     (f, n, t, e) -> optimize_pgomea(f, n, t, e, forced_improvement = :none, fos_type=:random)),
+    # ("Permutation GOMEA  - LT/Distance", 
+    #     (f, n, t, e) -> optimize_pgomea(f, n, t, e, fos_type=:distance)),
+    
+    # qGOMEA
+    # ("qGOMEA - LT/Distance - 1x FI - OX", 
+    #     (f, n, t, e) -> optimize_qgomea(f, n, t, e, forced_improvement = :original)),
+    ("qGOMEA - LT/Distance - 10x FI - OX", 
+        (f, n, t, e) -> optimize_qgomea(f, n, t, e, forced_improvement = :extended)),
+    # ("qGOMEA - LT/Distance - No FI - OX", 
+    #     (f, n, t, e) -> optimize_qgomea(f, n, t, e, forced_improvement = :none)),
+    
+    # ("qGOMEA - LT/PermutationGOMEA Original", 
+    #     (f, n, t, e) -> optimize_qgomea(f, n, t, e, fos_type=:original)),
+    # ("qGOMEA - LT/Distance - 10x FI - PMX", 
+    #     (f, n, t, e) -> optimize_qgomea(f, n, t, e, permutation_repair=:pmx)),
+
+    # ("qGOMEA - RT - 1x FI - OX", 
+    #     (f, n, t, e) -> optimize_qgomea(f, n, t, e, forced_improvement = :original, fos_type=:random)),
+    ("qGOMEA - RT - 10x FI - OX", 
+        (f, n, t, e) -> optimize_qgomea(f, n, t, e, forced_improvement = :extended, fos_type=:random)),
+    # ("qGOMEA - RT - No FI - OX", 
+    #     (f, n, t, e) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, fos_type=:random)),
+    
+    # Random Key SimpleGA
     ("Random Key SimpleGA", (f, n, t, e) -> optimize_rksimplega(f, n, t, e)),
-    ("Integer Permutation (PMX) SimpleGA", 
+    
+    # Integer Permutation SimpleGA with various permutation crossover operators.
+    ("Integer Permutation SimpleGA - PMX", 
         (f, n, t, e) -> optimize_ipsimplega(PMX(n), f, n, t, e)),
-    ("Integer Permutation (OX) SimpleGA", 
+    ("Integer Permutation SimpleGA - OX", 
         (f, n, t, e) -> optimize_ipsimplega(OX(n), f, n, t, e)),
-    ("Integer Permutation (CX) SimpleGA", 
+    ("Integer Permutation SimpleGA - CX", 
         (f, n, t, e) -> optimize_ipsimplega(CX(n), f, n, t, e)),
-    ("Integer Permutation (ER) SimpleGA", 
+    ("Integer Permutation SimpleGA - ER", 
         (f, n, t, e) -> optimize_ipsimplega(ER(n), f, n, t, e)),
 ]
 
