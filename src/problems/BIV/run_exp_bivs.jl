@@ -24,19 +24,11 @@ else
 end
 path_results_time = "./results/results_$(exp_idx_offset)_time.csv"
 path_results_evals = "./results/results_$(exp_idx_offset)_evals.csv"
-path_instances = "./instances/taillard/instances"
 
 # Make sure ./results exists
 if !isdir("./results")
     mkdir("./results")
 end
-
-# Find instance files.
-instances = glob(string(path_instances, "/*.dat"))
-
-# Check if instances are present.
-err_no_instances = """No instances found."""
-@assert length(instances) != 0 err_no_instances
 
 println("Loading problem & approaches...")
 # Load problem utilities
