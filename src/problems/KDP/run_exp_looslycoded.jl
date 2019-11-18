@@ -102,7 +102,7 @@ approaches = [
 ]
 
 println("Initializing instances")
-# Load and parse all instances.
+# Initialize instances.
 n_blocks = [3, 4, 5, 10, 20]
 n_block_size = [4, 5, 6, 7, 8, 9]
 
