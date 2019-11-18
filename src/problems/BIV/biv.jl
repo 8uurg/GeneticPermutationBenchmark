@@ -164,3 +164,15 @@ function sorted_sequential_inversion_rev(perm :: Vector{Int64})
     end
     return score
 end
+
+struct BIVInstance{F <: Function}
+    func :: F
+    n :: Int64
+end
+
+function bb_wrap_biv(instance :: BIVInstance)
+    function evaluate(permutation :: Vector{Int64}) :: Float64
+        return instance.func(permutation)
+    end
+    return evaluate
+end
