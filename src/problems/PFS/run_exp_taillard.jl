@@ -108,7 +108,7 @@ instances = collect(Iterators.flatten(
         instance_file = open(instance_path, "r"); 
         instance_str = read(instance_file, String);
         close(instance_file);
-        ( (basename(instance_path), instance) 
+        ( (string(basename(instance_path), "#", i), instance) 
             for (i, instance) in 
                 enumerate(parse_pfs_taillard_all(instance_str)))
     end 
