@@ -135,3 +135,109 @@ function bb_wrap_oas_assignment(instance :: OASInstance)
 
     return evaluate
 end
+
+"""
+    parse_oas_cesaret(file)
+
+Parse an OAS instance as formatted by Cesaret et al.
+"""
+function parse_oas_cesaret(file)
+    # Assume two dummy orders at the beginning (order 0) and at the end (order n+1)
+    # These dummy orders should be removed from the instance
+    # Except for the order dependent setup time, as order 0 is used in the case
+    # there is no prior job.
+    parseline(str) = parse.(Int64, split(str, ","))
+    parselinef(str) = parse.(Float64, split(str, ","))
+    open(file) do f
+        r = parseline(readline(f))[2:end-1]
+        p = parseline(readline(f))[2:end-1]
+        d = parseline(readline(f))[2:end-1]
+        d̄ = parseline(readline(f))[2:end-1]
+        e = parseline(readline(f))[2:end-1]
+        w = parselinef(readline(f))[2:end-1]
+        n = length(r)
+        s = vcat([parseline(readline(f))' for i in 0:(n+1)]...)
+        # Matrix s is n+2 by n+2, with two dummy orders.
+        # The dummy order
+        s = OffsetArray(s[1:n+1, 2:n+2], (0:n, 1:n+1))
+        OASInstance(n, r, p, d, d̄, e, w, s)
+    end
+end
+
+"""
+    write_oas_cesaret(file, instance)
+
+Write an OAS instance `instance` to `file` as formatted by Cesaret et al.
+"""
+function write_oas_cesaret(file, instance :: OASInstance)
+    open(file, write=true) do f
+        # r
+        print(f, "0,") # Dummy job 0
+        print(f, join(instance.r, ","))
+        print(f, ",0") # Dummy job n+1
+        print(f, '\n')
+        # p
+        print(f, "0,") # Dummy job 0
+        print(f, join(instance.p, ","))
+        print(f, ",0") # Dummy job n+1
+        print(f, '\n')
+        # d
+        print(f, "0,") # Dummy job 0
+        print(f, join(instance.d, ","))
+        print(f, ",") # Dummy job n+1
+        print(f, maximum(instance.d))
+        print(f, '\n')
+        # d̄
+        print(f, "0,") # Dummy job 0
+        print(f, join(instance.d̄, ","))
+        print(f, ",") # Dummy job n+1
+        print(f, maximum(instance.d̄))
+        print(f, '\n')
+        # e
+        print(f, "0,") # Dummy job 0
+        print(f, join(instance.e, ","))
+        print(f, ",0") # Dummy job n+1
+        print(f, '\n')
+        # w
+        print(f, "0,") # Dummy job 0
+        print(f, join(instance.w, ","))
+        print(f, ",0") # Dummy job n+1
+        print(f, '\n')
+        # s
+        n = instance.n
+        for si in 0:n # Note, starting with dummy job before!
+            print(f, "0,")
+            print(f, join((instance.s[si, sii] for sii in 1:n), ","))
+            print(f, ",0") # Dummy job n+1
+            print(f, '\n')
+        end
+        print(f, join((0 for _ in 0:n+1), ",")) # Dummy job n+1
+        print(f, '\n')
+    end
+end
+
+"""
+    convert_tsp_to_oas(D :: Matrix{Int64})
+
+Construct an OAS instance by converting a Travelling Salesperson instance.
+
+!!! note Objective value is increased by `n * v`, 
+    where v is the sum of the maximum of each row of `D`.
+"""
+function convert_tsp_to_oas(D :: Matrix{Int64})
+    n = size(D, 1)
+    v = sum(maximum(row) for row in eachrow(D))
+    r = zeros(n)
+    p = zeros(n)
+    d = ones(n) .* v
+    d̄ = ones(n) .* v
+    d[1] = 0 # Special order.
+    e = ones(n) .* v
+    w = ones(n) .* v
+    w[1] = 1 # Special order.
+    s = OffsetArray(zeros(Int64, (n+1, n+1)), 0:n, 1:(n+1))
+    s[1:n,1:n] .= D
+    s[0, :] .= s[1, :]
+    s[1, :] .= v # No orders allowed after special order.
+    OASInstance(n, r, p, d, d̄, e, w, s)
+end
