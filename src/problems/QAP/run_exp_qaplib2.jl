@@ -22,8 +22,8 @@ if length(ARGS) > 0
 else
     exp_idx_offset = 0
 end
-path_results_time = "./results/results_$(exp_idx_offset)_time.csv"
-path_results_evals = "./results/results_$(exp_idx_offset)_evals.csv"
+path_results_time = "./results/results_qap_qaplib_$(exp_idx_offset)_time.csv"
+path_results_evals = "./results/results_qap_qaplib_$(exp_idx_offset)_evals.csv"
 path_instances = "./instances/qaplib/instances"
 
 # Make sure ./results exists
