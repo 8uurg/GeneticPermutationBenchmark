@@ -24,7 +24,7 @@ else
 end
 path_results_time = "./results/results_$(exp_idx_offset)_time.csv"
 path_results_evals = "./results/results_$(exp_idx_offset)_evals.csv"
-path_instances = "./instances/taillard/instances"
+path_instances = "./instances/qaplib/instances"
 
 # Make sure ./results exists
 if !isdir("./results")
