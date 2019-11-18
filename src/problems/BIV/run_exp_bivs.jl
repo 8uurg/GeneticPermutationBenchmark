@@ -112,6 +112,9 @@ instances = [
     ("Inversion n=25" , BIVInstance(sorted_inversion,  25)),
     ("Inversion n=50" , BIVInstance(sorted_inversion,  50)),
     ("Inversion n=100", BIVInstance(sorted_inversion, 100)),
+    ("Inversion n=200", BIVInstance(sorted_inversion, 200)),
+    ("Inversion n=400", BIVInstance(sorted_inversion, 400)),
+    ("Inversion n=800", BIVInstance(sorted_inversion, 800)),
     # Sequential Inversions benchmark function
     ("Sequential Inversion n=10" , BIVInstance(sorted_sequential_inversion,  10)),
     ("Sequential Inversion n=15" , BIVInstance(sorted_sequential_inversion,  15)),
@@ -119,6 +122,9 @@ instances = [
     ("Sequential Inversion n=25" , BIVInstance(sorted_sequential_inversion,  25)),
     ("Sequential Inversion n=50" , BIVInstance(sorted_sequential_inversion,  50)),
     ("Sequential Inversion n=100", BIVInstance(sorted_sequential_inversion, 100)),
+    ("Sequential Inversion n=200", BIVInstance(sorted_sequential_inversion, 200)),
+    ("Sequential Inversion n=400", BIVInstance(sorted_sequential_inversion, 400)),
+    ("Sequential Inversion n=800", BIVInstance(sorted_sequential_inversion, 800)),
     # Sequential Pairs benchmark function
     ("Sequential Pairs n=10" , BIVInstance(sorted_sequential_pairs,  10)),
     ("Sequential Pairs n=15" , BIVInstance(sorted_sequential_pairs,  15)),
@@ -126,6 +132,9 @@ instances = [
     ("Sequential Pairs n=25" , BIVInstance(sorted_sequential_pairs,  25)),
     ("Sequential Pairs n=50" , BIVInstance(sorted_sequential_pairs,  50)),
     ("Sequential Pairs n=100", BIVInstance(sorted_sequential_pairs, 100)),
+    ("Sequential Pairs n=200", BIVInstance(sorted_sequential_pairs, 200)),
+    ("Sequential Pairs n=400", BIVInstance(sorted_sequential_pairs, 400)),
+    ("Sequential Pairs n=800", BIVInstance(sorted_sequential_pairs, 800)),
 ]
 
 # Initialize results storage
