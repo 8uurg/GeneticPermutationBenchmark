@@ -159,10 +159,10 @@ begin
         # Dump results.
         # lock(results_lock)
         for (time, fitness) in zip(trace.moments, trace.results)
-            push!(results_time_thread[Threads.threadid()], (instance_name, approach_name, exp_i + exp_idx_offset, time, -fitness))
+            push!(results_time_thread[Threads.threadid()], (instance_name, approach_name, exp_i + exp_idx_offset, time, fitness))
         end
         for (evals, fitness) in zip(trace.moments_n_eval, trace.results_eval)
-            push!(results_eval_thread[Threads.threadid()], (instance_name, approach_name, exp_i + exp_idx_offset, evals, -fitness))
+            push!(results_eval_thread[Threads.threadid()], (instance_name, approach_name, exp_i + exp_idx_offset, evals, fitness))
         end
         next!(progress)
         # unlock(results_lock)
