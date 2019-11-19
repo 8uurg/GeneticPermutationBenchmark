@@ -131,7 +131,10 @@ begin
         # Alternatively, 5000 evaluations indicate that most things have been ran as well.
         optimize_approach(bb_warmup, instance_warmup.n, 2.0, 5000)
     end
-    results_lock = Threads.SpinLock()
+    # results_lock = Threads.SpinLock()
+
+    results_time_thread = [copy(results_time) for _ in 1:Threads.nthreads()]
+    results_eval_thread = [copy(results_eval) for _ in 1:Threads.nthreads()]
 
     experiments = collect(Iterators.product(instances, approaches, 1:n_exp))
     
@@ -154,15 +157,20 @@ begin
         # Postprocess trace (eg. clean it up)
         postprocess_trace!(trace)
         # Dump results.
-        lock(results_lock)
+        # lock(results_lock)
         for (time, fitness) in zip(trace.moments, trace.results)
-            push!(results_time, (instance_name, approach_name, exp_i + exp_idx_offset, time, -fitness))
+            push!(results_time_thread[Threads.threadid()], (instance_name, approach_name, exp_i + exp_idx_offset, time, -fitness))
         end
         for (evals, fitness) in zip(trace.moments_n_eval, trace.results_eval)
-            push!(results_eval, (instance_name, approach_name, exp_i + exp_idx_offset, evals, -fitness))
+            push!(results_eval_thread[Threads.threadid()], (instance_name, approach_name, exp_i + exp_idx_offset, evals, -fitness))
         end
         next!(progress)
-        unlock(results_lock)
+        # unlock(results_lock)
+    end
+    # Gather results for each thread.
+    for th in 1:Threads.nthreads()
+        append!(results_time, results_time_thread[th])
+        append!(results_eval, results_eval_thread[th])
     end
     # Store results
     results_time |> CSV.write(path_results_time)
