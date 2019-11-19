@@ -110,7 +110,7 @@ instances = collect(Iterators.flatten(
         close(instance_file);
         ( (basename(instance_path), instance) 
             for (i, instance) in 
-                enumerate([parse_qap_qaplib(instance_str)]))
+                enumerate([parse_qap_qaplib(Int64, instance_str)]))
     end 
     for instance_path in instances))
 
