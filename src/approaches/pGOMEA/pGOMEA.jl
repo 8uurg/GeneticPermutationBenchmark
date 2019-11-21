@@ -1,4 +1,4 @@
-import Random:shuffle!
+using Random
 import Statistics:quantile
 include("../../utilities/FastClustering.jl")
 
