@@ -127,7 +127,7 @@ begin
     println("Warming up approaches")
     instance_warmup = instances[1][2]
     bb_warmup = bb_wrap_kdp(instance_warmup)
-    for (approach_name, optimize_approach) in approaches
+    for (approach_name, optimize_approach, opt) in approaches
         # ~2.0s should be sufficient to get Julia to compile and run everything.
         # Alternatively, 5000 evaluations indicate that most things have been ran as well.
         optimize_approach(bb_warmup, instance_warmup.n, 2.0, 5000)
@@ -145,7 +145,7 @@ begin
 
     progress = Progress(length(experiments))
     # @distributed
-    Threads.@threads for ((instance_name, instance), (approach_name, optimize_approach), exp_i) in experiments
+    Threads.@threads for ((instance_name, instance, instance_opt), (approach_name, optimize_approach), exp_i) in experiments
         
         bbf = bb_wrap_kdp(instance)
         # Test evaluation.
@@ -153,7 +153,7 @@ begin
         # Perform GC for good measure.
         GC.gc()
         # Setup performance/time trace in black box.
-        trace = ProgressTrace(moments, moments_eval, 0.0)
+        trace = ProgressTrace(moments, moments_eval, instance_opt)
         bbf_traced = trace_bb(bbf, trace)
         # Run experiment
         res = optimize_approach(bbf_traced, instance.n, t_max, e_max)

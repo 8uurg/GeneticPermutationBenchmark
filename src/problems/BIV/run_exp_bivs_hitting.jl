@@ -100,35 +100,35 @@ println("Initializing instances")
 
 instances = [
     # Inversions benchmark function
-    ("Inversion n=10" , BIVInstance(sorted_inversion,  10), div( 10*( 10+1), 2)),
-    ("Inversion n=15" , BIVInstance(sorted_inversion,  15), div( 15*( 15+1), 2)),
-    ("Inversion n=20" , BIVInstance(sorted_inversion,  20), div( 20*( 20+1), 2)),
-    ("Inversion n=25" , BIVInstance(sorted_inversion,  25), div( 25*( 25+1), 2)),
-    ("Inversion n=50" , BIVInstance(sorted_inversion,  50), div( 50*( 50+1), 2)),
-    ("Inversion n=100", BIVInstance(sorted_inversion, 100), div(100*(100+1), 2)),
-    ("Inversion n=200", BIVInstance(sorted_inversion, 200), div(200*(200+1), 2)),
-    ("Inversion n=400", BIVInstance(sorted_inversion, 400), div(400*(400+1), 2)),
-    ("Inversion n=800", BIVInstance(sorted_inversion, 800), div(800*(800+1), 2)),
+    ("Inversion n=10" , BIVInstance(sorted_inversion,  10), convert(Float64, div( 10*( 10+1), 2))),
+    ("Inversion n=15" , BIVInstance(sorted_inversion,  15), convert(Float64, div( 15*( 15+1), 2))),
+    ("Inversion n=20" , BIVInstance(sorted_inversion,  20), convert(Float64, div( 20*( 20+1), 2))),
+    ("Inversion n=25" , BIVInstance(sorted_inversion,  25), convert(Float64, div( 25*( 25+1), 2))),
+    ("Inversion n=50" , BIVInstance(sorted_inversion,  50), convert(Float64, div( 50*( 50+1), 2))),
+    ("Inversion n=100", BIVInstance(sorted_inversion, 100), convert(Float64, div(100*(100+1), 2))),
+    ("Inversion n=200", BIVInstance(sorted_inversion, 200), convert(Float64, div(200*(200+1), 2))),
+    ("Inversion n=400", BIVInstance(sorted_inversion, 400), convert(Float64, div(400*(400+1), 2))),
+    ("Inversion n=800", BIVInstance(sorted_inversion, 800), convert(Float64, div(800*(800+1), 2))),
     # Sequential Inversions benchmark function
-    ("Sequential Inversion n=10" , BIVInstance(sorted_sequential_inversion,  10),  10 - 1),
-    ("Sequential Inversion n=15" , BIVInstance(sorted_sequential_inversion,  15),  15 - 1),
-    ("Sequential Inversion n=20" , BIVInstance(sorted_sequential_inversion,  20),  20 - 1),
-    ("Sequential Inversion n=25" , BIVInstance(sorted_sequential_inversion,  25),  25 - 1),
-    ("Sequential Inversion n=50" , BIVInstance(sorted_sequential_inversion,  50),  50 - 1),
-    ("Sequential Inversion n=100", BIVInstance(sorted_sequential_inversion, 100), 100 - 1),
-    ("Sequential Inversion n=200", BIVInstance(sorted_sequential_inversion, 200), 200 - 1),
-    ("Sequential Inversion n=400", BIVInstance(sorted_sequential_inversion, 400), 400 - 1),
-    ("Sequential Inversion n=800", BIVInstance(sorted_sequential_inversion, 800), 800 - 1),
+    ("Sequential Inversion n=10" , BIVInstance(sorted_sequential_inversion,  10), convert(Float64,  10 - 1)),
+    ("Sequential Inversion n=15" , BIVInstance(sorted_sequential_inversion,  15), convert(Float64,  15 - 1)),
+    ("Sequential Inversion n=20" , BIVInstance(sorted_sequential_inversion,  20), convert(Float64,  20 - 1)),
+    ("Sequential Inversion n=25" , BIVInstance(sorted_sequential_inversion,  25), convert(Float64,  25 - 1)),
+    ("Sequential Inversion n=50" , BIVInstance(sorted_sequential_inversion,  50), convert(Float64,  50 - 1)),
+    ("Sequential Inversion n=100", BIVInstance(sorted_sequential_inversion, 100), convert(Float64, 100 - 1)),
+    ("Sequential Inversion n=200", BIVInstance(sorted_sequential_inversion, 200), convert(Float64, 200 - 1)),
+    ("Sequential Inversion n=400", BIVInstance(sorted_sequential_inversion, 400), convert(Float64, 400 - 1)),
+    ("Sequential Inversion n=800", BIVInstance(sorted_sequential_inversion, 800), convert(Float64, 800 - 1)),
     # Sequential Pairs benchmark function
-    ("Sequential Pairs n=10" , BIVInstance(sorted_sequential_pairs,  10),  10 - 1),
-    ("Sequential Pairs n=15" , BIVInstance(sorted_sequential_pairs,  15),  15 - 1),
-    ("Sequential Pairs n=20" , BIVInstance(sorted_sequential_pairs,  20),  20 - 1),
-    ("Sequential Pairs n=25" , BIVInstance(sorted_sequential_pairs,  25),  25 - 1),
-    ("Sequential Pairs n=50" , BIVInstance(sorted_sequential_pairs,  50),  50 - 1),
-    ("Sequential Pairs n=100", BIVInstance(sorted_sequential_pairs, 100), 100 - 1),
-    ("Sequential Pairs n=200", BIVInstance(sorted_sequential_pairs, 200), 200 - 1),
-    ("Sequential Pairs n=400", BIVInstance(sorted_sequential_pairs, 400), 400 - 1),
-    ("Sequential Pairs n=800", BIVInstance(sorted_sequential_pairs, 800), 800 - 1),
+    ("Sequential Pairs n=10" , BIVInstance(sorted_sequential_pairs,  10), convert(Float64, 10 - 1)),
+    ("Sequential Pairs n=15" , BIVInstance(sorted_sequential_pairs,  15), convert(Float64, 15 - 1)),
+    ("Sequential Pairs n=20" , BIVInstance(sorted_sequential_pairs,  20), convert(Float64, 20 - 1)),
+    ("Sequential Pairs n=25" , BIVInstance(sorted_sequential_pairs,  25), convert(Float64, 25 - 1)),
+    ("Sequential Pairs n=50" , BIVInstance(sorted_sequential_pairs,  50), convert(Float64, 50 - 1)),
+    ("Sequential Pairs n=100", BIVInstance(sorted_sequential_pairs, 100), convert(Float64,100 - 1)),
+    ("Sequential Pairs n=200", BIVInstance(sorted_sequential_pairs, 200), convert(Float64,200 - 1)),
+    ("Sequential Pairs n=400", BIVInstance(sorted_sequential_pairs, 400), convert(Float64,400 - 1)),
+    ("Sequential Pairs n=800", BIVInstance(sorted_sequential_pairs, 800), convert(Float64,800 - 1)),
 ]
 
 # Initialize results storage
@@ -175,7 +175,7 @@ begin
         # Perform GC for good measure.
         GC.gc()
         # Setup performance/time trace in black box.
-        trace = ProgressTrace(moments, moments_eval, 0.0, instance_opt)
+        trace = ProgressTrace(moments, moments_eval, instance_opt)
         bbf_traced = trace_bb(bbf, trace)
         # Run experiment
         res = optimize_approach(bbf_traced, instance.n, t_max, e_max)
