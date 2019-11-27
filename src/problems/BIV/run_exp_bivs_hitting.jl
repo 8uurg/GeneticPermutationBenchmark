@@ -178,7 +178,7 @@ begin
         trace = ProgressTrace(moments, moments_eval, instance_opt)
         bbf_traced = trace_bb(bbf, trace)
         # Run experiment
-        res = optimize_approach(bbf_traced, instance.n, t_max, e_max)
+        res = optimize_approach(bbf_traced, instance.n, t_max, e_max; target_fitness=instance_opt)
         # Postprocess trace (eg. clean it up)
         postprocess_trace!(trace)
         # Dump results.
