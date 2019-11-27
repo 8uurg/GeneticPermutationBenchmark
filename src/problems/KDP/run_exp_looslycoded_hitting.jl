@@ -22,10 +22,10 @@ if length(ARGS) > 0
 else
     exp_idx_offset = 0
 end
-path_results_time = "./results/results_kdp_loose_$(exp_idx_offset)_time.csv"
-path_results_evals = "./results/results_kdp_loose_$(exp_idx_offset)_evals.csv"
-path_results_time_hit = "./results/results_kdp_loose_$(exp_idx_offset)_time_hit.csv"
-path_results_evals_hit = "./results/results_kdp_loose_$(exp_idx_offset)_evals_hit.csv"
+path_results_time = "./results/results_exphit_kdp_loose_$(exp_idx_offset)_time.csv"
+path_results_evals = "./results/results_exphit_kdp_loose_$(exp_idx_offset)_evals.csv"
+path_results_time_hit = "./results/results_exphit_kdp_loose_$(exp_idx_offset)_time_hit.csv"
+path_results_evals_hit = "./results/results_exphit_kdp_loose_$(exp_idx_offset)_evals_hit.csv"
 
 
 # Make sure ./results exists
