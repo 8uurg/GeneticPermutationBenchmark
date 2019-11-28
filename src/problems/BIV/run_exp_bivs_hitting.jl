@@ -100,15 +100,15 @@ println("Initializing instances")
 
 instances = [
     # Inversions benchmark function
-    ("Inversion n=10" , BIVInstance(sorted_inversion,  10), convert(Float64, div( 10*( 10+1), 2))),
-    ("Inversion n=15" , BIVInstance(sorted_inversion,  15), convert(Float64, div( 15*( 15+1), 2))),
-    ("Inversion n=20" , BIVInstance(sorted_inversion,  20), convert(Float64, div( 20*( 20+1), 2))),
-    ("Inversion n=25" , BIVInstance(sorted_inversion,  25), convert(Float64, div( 25*( 25+1), 2))),
-    ("Inversion n=50" , BIVInstance(sorted_inversion,  50), convert(Float64, div( 50*( 50+1), 2))),
-    ("Inversion n=100", BIVInstance(sorted_inversion, 100), convert(Float64, div(100*(100+1), 2))),
-    ("Inversion n=200", BIVInstance(sorted_inversion, 200), convert(Float64, div(200*(200+1), 2))),
-    ("Inversion n=400", BIVInstance(sorted_inversion, 400), convert(Float64, div(400*(400+1), 2))),
-    ("Inversion n=800", BIVInstance(sorted_inversion, 800), convert(Float64, div(800*(800+1), 2))),
+    ("Inversion n=10" , BIVInstance(sorted_inversion,  10), convert(Float64, div( 10*( 10-1), 2))),
+    ("Inversion n=15" , BIVInstance(sorted_inversion,  15), convert(Float64, div( 15*( 15-1), 2))),
+    ("Inversion n=20" , BIVInstance(sorted_inversion,  20), convert(Float64, div( 20*( 20-1), 2))),
+    ("Inversion n=25" , BIVInstance(sorted_inversion,  25), convert(Float64, div( 25*( 25-1), 2))),
+    ("Inversion n=50" , BIVInstance(sorted_inversion,  50), convert(Float64, div( 50*( 50-1), 2))),
+    ("Inversion n=100", BIVInstance(sorted_inversion, 100), convert(Float64, div(100*(100-1), 2))),
+    ("Inversion n=200", BIVInstance(sorted_inversion, 200), convert(Float64, div(200*(200-1), 2))),
+    ("Inversion n=400", BIVInstance(sorted_inversion, 400), convert(Float64, div(400*(400-1), 2))),
+    ("Inversion n=800", BIVInstance(sorted_inversion, 800), convert(Float64, div(800*(800-1), 2))),
     # Sequential Inversions benchmark function
     ("Sequential Inversion n=10" , BIVInstance(sorted_sequential_inversion,  10), convert(Float64,  10 - 1)),
     ("Sequential Inversion n=15" , BIVInstance(sorted_sequential_inversion,  15), convert(Float64,  15 - 1)),
