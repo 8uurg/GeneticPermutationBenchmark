@@ -7,9 +7,9 @@ using Random
 # Note: Set JULIA_NUM_THREADS to the amount of threads to use.
 
 # Number of runs, per approach, per instance
-n_exp = 10
+n_exp = 5
 # (Maximum) amount of time for each run, per instance in seconds.
-t_max = 10.0
+t_max = 100.0
 # (Maximum) amount of evaluations
 e_max = typemax(Int64) # 10000000
 # Sidenote: An approach can converge and not use up the evaluations.
