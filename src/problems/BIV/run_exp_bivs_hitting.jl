@@ -69,8 +69,10 @@ approaches = [
     # ("qGOMEA - LT/Distance - No FI - OX", 
     #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, target_fitness=target_fitness)),
     
-    # ("qGOMEA - LT/PermutationGOMEA Original", 
+    # ("qGOMEA - LT/PermutationGOMEA Original - 10x FI - OX", 
     #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, fos_type=:original, target_fitness=target_fitness)),
+    # ("qGOMEA - LT/PermutationGOMEA Original - No FI - OX", 
+    #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, fos_type=:original, forced_improvement = :none, target_fitness=target_fitness)),
     # ("qGOMEA - LT/Distance - 10x FI - PMX", 
     #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, permutation_repair=:pmx, target_fitness=target_fitness)),
 
