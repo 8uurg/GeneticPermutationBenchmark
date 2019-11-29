@@ -58,7 +58,10 @@ function random_rescale!(sol :: Vector{Float64}, mask :: Vector{Int64}, rng :: M
     n_intervals = length(sol)
     # Pick an interval [random_left_bracket:random_left_bracket+1/n_intervals]
     # to scale elements to.
-    random_left_bracket = rand(rng, 1:n_intervals) / n_intervals
+    random_left_bracket = rand(rng, 0:(n_intervals-1)) / n_intervals
+    # In order to avoid equal keys, and hence bias towards the solution [1, ..., n]
+    # A tiny random value is added as well.
+    random_left_bracket += rand(rng) / (n_intervals * n_intervals)
     # Remap keys from [sm_min, sm_max] to [random_left_bracket:random_left_bracket+1/n_intervals]
     for i in mask
         sol[i] = ((sol[i] - sm_min) / sm_range) * (1.0 / n_intervals) + random_left_bracket
