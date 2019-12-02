@@ -496,7 +496,7 @@ function step!(pm :: QGomeaMixer)
     # Compute FOS
     empty!(pm.fos)
     parent_idx = zeros(Int64, 2*pm.n-1)
-    fos_indexset = LCP(pm.D, pm.crf; parent_idx=parent_idx)
+    fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx)
     append!(pm.fos, collect(a) for (i,a) in enumerate(fos_indexset))
 
     improved_any = false

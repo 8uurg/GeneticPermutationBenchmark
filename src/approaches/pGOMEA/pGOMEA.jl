@@ -61,7 +61,7 @@ function random_rescale!(sol :: Vector{Float64}, mask :: Vector{Int64}, rng :: M
     random_left_bracket = rand(rng, 0:(n_intervals-1)) / n_intervals
     # NOTE! In order to avoid equal keys, and hence bias towards the solution [1, ..., n]
     # A tiny random value can be added by uncommenting the following line.
-    # random_left_bracket += rand(rng) / (n_intervals * n_intervals)
+    # random_left_bracket += rand(rng) / (n_intervals * n_intervals * 1000)
 
     # Remap keys from [sm_min, sm_max] to [random_left_bracket:random_left_bracket+1/n_intervals]
     for i in mask
@@ -338,7 +338,7 @@ function step!(pm :: PGomeaMixer)
     # Compute FOS using D
     empty!(pm.fos)
     parent_idx = zeros(Int64, 2*pm.n-1)
-    fos_indexset = LCP(pm.D, pm.crf; parent_idx=parent_idx)
+    fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx)
     append!(pm.fos, collect(a) for (i,a) in enumerate(fos_indexset))
 
     improved_any = false
