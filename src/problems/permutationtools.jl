@@ -18,3 +18,20 @@ function random_remap(f :: Function, n :: Int64)
     end
     return rex
 end
+
+"""
+    random_remap_and_give_mapping(f :: Function, n :: Int64)
+
+This function does the same thing as random_remap, but in addition the mapping is returned as well.
+"""
+function random_remap_and_give_mapping(f :: Function, n :: Int64)
+    mapping = shuffle!(collect(1:n))
+    placeholder = shuffle!(collect(1:n))
+    function rex(perm :: Vector{Int64})
+        for i in 1:length(perm)
+            placeholder[i] = mapping[perm[i]]
+        end
+        return f(placeholder)
+    end
+    return rex, mapping
+end
