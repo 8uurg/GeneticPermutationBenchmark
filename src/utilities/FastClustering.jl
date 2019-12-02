@@ -1,5 +1,6 @@
 include("./IndexSet.jl")
 using LinearAlgebra
+using Random
 
 abstract type ClusteringReductionFormula end
 
@@ -26,13 +27,24 @@ end
     max(DCₖᵢ, DCₖⱼ)
 end
 
-function nnmasked(M, j, rowmask)
+function nnmasked(M :: Matrix, j :: Int64, rowmask, rng :: MersenneTwister, randomized :: Bool)
     am = 1
+    cx = 0
     cmin = typemax(Float64)
     for (ismasked, (i, v)) in zip(rowmask, enumerate(view(M, :, j)))
-        if ismasked && v < cmin && i != j
-            cmin = v
-            am = i
+        if ismasked && v <= cmin && i != j
+            cx += 1
+            if randomized
+                if rand(rng, 1:cx) == 1
+                    cmin = v
+                    am = i
+                end
+            else
+                if v < cmin
+                    cmin = v
+                    am = i
+                end
+            end
         end
     end
     am
@@ -46,9 +58,11 @@ idxunit(x, setsize) = begin
 
 function LCP!!(D :: Matrix,
                FoS :: Vector{IndexSet{V}},
-               crf :: T;
+               crf :: T,
+               rng :: MersenneTwister;
                merge_distance :: Union{Nothing, Vector{Float64}} = nothing,
-               parent_idx :: Union{Nothing, Vector{Int64}} = nothing) where
+               parent_idx :: Union{Nothing, Vector{Int64}} = nothing,
+               randomized :: Bool = false) where
                {T <: ClusteringReductionFormula, V}
     #
     @assert issymmetric(D) "D is required to be symmetric."
@@ -96,7 +110,7 @@ function LCP!!(D :: Matrix,
             push!(NN_chain, rand(findall(inuse)))
         end
         while length(NN_chain) < 3
-            @inbounds push!(NN_chain, nnmasked(D, NN_chain[end], inuse))
+            @inbounds push!(NN_chain, nnmasked(D, NN_chain[end], inuse, rng, randomized))
         end
         # Until reciprocal point found.
         @inbounds while NN_chain[end] != NN_chain[end-2]
@@ -106,7 +120,7 @@ function LCP!!(D :: Matrix,
                 push!(NN_chain, nxt)
                 break;
             end
-            nxt = nnmasked(D, NN_chain[end], inuse)
+            nxt = nnmasked(D, NN_chain[end], inuse, rng, randomized)
 
             # Make a tiebreaker go in favour of a reciprocal point.
             @inbounds if D[NN_chain[end], nxt] == D[NN_chain[end], NN_chain[end-1]]
@@ -158,15 +172,18 @@ function LCP!!(D :: Matrix,
 end
 
 function LCP(D :: Matrix,
-        crf :: T;
+        crf :: T,
+        rng :: MersenneTwister = Random.GLOBAL_RNG;
         merge_distance :: Union{Nothing, Vector{Float64}} = nothing,
-        parent_idx :: Union{Nothing, Vector{Int64}} = nothing) where {T <: ClusteringReductionFormula, V <: Any}
+        parent_idx :: Union{Nothing, Vector{Int64}} = nothing,
+        randomized :: Bool = false) where {T <: ClusteringReductionFormula, V <: Any}
     n = size(D, 1)
     idxsetsize = _div64(n) + 1
     FoS = Vector{IndexSet{idxsetsize}}(undef, 2n-1)
-    LCP!!(copy(D), FoS, crf;
+    LCP!!(copy(D), FoS, crf, rng;
         merge_distance=merge_distance,
-        parent_idx=parent_idx)
+        parent_idx=parent_idx,
+        randomized = randomized)
     return FoS
 end
 ##
