@@ -103,7 +103,7 @@ struct PGomeaMixer
     fos :: Vector{Vector{Int64}}
     # Internal config.
     forced_improvement :: Symbol
-    fos_type :: Symbol
+    fos_type :: Union{Symbol, Vector{Vector{Int64}}}
     crf :: ClusteringReductionFormula
     # Stats & info
     best :: Ref{PGomeaSolution}
@@ -127,7 +127,7 @@ struct PGomeaMixer
         D :: Matrix{Float64},
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
-        fos_type :: Symbol,
+        fos_type :: Union{Symbol, Vector{Vector{Int64}}},
         crf :: ClusteringReductionFormula,
         rng :: MersenneTwister)
         #
@@ -147,7 +147,7 @@ struct PGomeaMixer
         D :: Matrix{Float64},
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
-        fos_type :: Symbol,
+        fos_type :: Union{Symbol, Vector{Vector{Int64}}},
         crf :: ClusteringReductionFormula,
         best :: Ref{PGomeaSolution},
         rng :: MersenneTwister)
@@ -329,24 +329,39 @@ function step!(pm :: PGomeaMixer)
     for p in pm.population
         reencode!(p.perm, pm.reencode_perm, pm.reencode_keys, pm.rng)
     end
-    # Calculate D -- the Dependency Matrix -- depending using the population.
+
+    # Calculate D -- the Dependency Matrix -- using the population.
+    is_linkage_tree = false
     if pm.fos_type == :distance
         calcD!(pm)
+        is_linkage_tree = true
     elseif pm.fos_type == :original
         calcD_original!(pm)
+        is_linkage_tree = true
     elseif pm.fos_type == :random
         calcD_random!(pm)
+        is_linkage_tree = true
+    elseif pm.fos_type == :univariate
+        # Univariate Factorization
+        empty!(pm.fos)
+        append!(pm.fos, [i] for i in 1:pm.n)
+    elseif typeof(pm.fos_type) <: Vector{Vector{Int64}}
+        # Predetermined Factorization
+        empty!(pm.fos)
+        append!(pm.fos, pm.fos_type)
     else
         error("Unknown FOS type $(pm.fos_type)")
     end
     # calcD_original_regularized!(pm)
     
     # Compute FOS using D
-    empty!(pm.fos)
-    parent_idx = zeros(Int64, 2*pm.n-1)
-    fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx)
-    #fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx, randomized=true)
-    append!(pm.fos, collect(a) for (i,a) in enumerate(fos_indexset))
+    if is_linkage_tree
+        empty!(pm.fos)
+        parent_idx = zeros(Int64, 2*pm.n-1)
+        fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx)
+        #fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx, randomized=true)
+        append!(pm.fos, collect(a) for (i,a) in enumerate(fos_indexset))
+    end
 
     improved_any = false
 
@@ -431,7 +446,7 @@ end
 
 function create_mixer(f :: Function, n :: Int64, population_size :: Int64, 
     forced_improvement :: Symbol,
-    fos_type :: Symbol,
+    fos_type :: Union{Symbol, Vector{Vector{Int64}}},
     crf :: ClusteringReductionFormula,
     rng :: MersenneTwister,
     best :: Union{Nothing, Ref{PGomeaSolution}} = nothing;
@@ -454,7 +469,7 @@ function optimize_pgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     population_size_base=4, 
     crf=UPGMA(),
     forced_improvement :: Symbol = :extended,
-    fos_type :: Symbol = :original,
+    fos_type :: Union{Symbol, Vector{Vector{Int64}}} = :original,
     target_fitness :: Union{Nothing, Float64} = nothing)
     #
     time_start = time()
