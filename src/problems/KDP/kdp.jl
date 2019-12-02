@@ -128,3 +128,16 @@ function bb_wrap_kdp(instance :: KDPInstance)
     end
     return evaluate
 end
+
+"""
+    get_blocks_idx(insta :: KDPInstance)
+
+Construct a list of blocks, groups of indices that are part of the same subfunction.
+"""
+function get_blocks_idx(insta :: KDPInstance) :: Vector{Vector{Int64}}
+    idxs = zeros(Int64, insta.n)
+    for (i, j) in enumerate(insta.mapping)
+        idxs[j] = i
+    end
+    return [idxs[i*insta.k+1:(i+1)*insta.k] for i in 0:(insta.b-1)]
+end
