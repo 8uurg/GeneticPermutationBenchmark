@@ -33,8 +33,11 @@ function nnmasked(M :: Matrix, j :: Int64, rowmask, rng :: MersenneTwister, rand
     cmin = typemax(Float64)
     for (ismasked, (i, v)) in zip(rowmask, enumerate(view(M, :, j)))
         if ismasked && v <= cmin && i != j
-            cx += 1
             if randomized
+                if v < cmin
+                    cx = 0
+                end
+                cx += 1
                 if rand(rng, 1:cx) == 1
                     cmin = v
                     am = i
