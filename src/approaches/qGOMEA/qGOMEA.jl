@@ -142,7 +142,7 @@ struct QGomeaMixer
     fos :: Vector{Vector{Int64}}
     # Internal config.
     forced_improvement :: Symbol
-    fos_type :: Symbol
+    fos_type :: Union{Symbol, Vector{Vector{Int64}}}
     crf :: ClusteringReductionFormula
     repair :: Symbol
     # Stats & info
@@ -168,7 +168,7 @@ struct QGomeaMixer
         D :: Matrix{Float64},
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
-        fos_type :: Symbol,
+        fos_type :: Union{Symbol, Vector{Vector{Int64}}},
         crf :: ClusteringReductionFormula,
         repair :: Symbol,
         rng :: MersenneTwister)
@@ -189,7 +189,7 @@ struct QGomeaMixer
         D :: Matrix{Float64},
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
-        fos_type :: Symbol,
+        fos_type :: Union{Symbol, Vector{Vector{Int64}}},
         crf :: ClusteringReductionFormula,
         repair :: Symbol,
         best :: Ref{QGomeaSolution},
@@ -482,23 +482,38 @@ function step!(pm :: QGomeaMixer)
     #
     #println([a.fitness for a in sort(pm.population, rev=true)[1:10]])
     # Calculate D depending on the population.
+    is_linkage_tree = false
     if pm.fos_type == :distance
         calcD!(pm)
+        is_linkage_tree = true
     elseif pm.fos_type == :original
         calcD_original!(pm)
+        is_linkage_tree = true
     elseif pm.fos_type == :random
         calcD_random!(pm)
+        is_linkage_tree = true
+    elseif pm.fos_type == :univariate
+        # Univariate Factorization
+        empty!(pm.fos)
+        append!(pm.fos, [i] for i in 1:pm.n)
+    elseif typeof(pm.fos_type) <: Vector{Vector{Int64}}
+        # Predetermined Factorization
+        empty!(pm.fos)
+        append!(pm.fos, pm.fos_type)
     else
         error("Unknown FOS type $(pm.fos_type)")
     end
     # calcD_original_regularized!(pm)
     # calcD_original_invd2!(pm)
-    # Compute FOS
-    empty!(pm.fos)
-    parent_idx = zeros(Int64, 2*pm.n-1)
-    fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx)
-    #fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx, randomized=true)
-    append!(pm.fos, collect(a) for (i,a) in enumerate(fos_indexset))
+
+    # Compute FOS using D
+    if is_linkage_tree
+        empty!(pm.fos)
+        parent_idx = zeros(Int64, 2*pm.n-1)
+        fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx)
+        #fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx, randomized=true)
+        append!(pm.fos, collect(a) for (i,a) in enumerate(fos_indexset))
+    end
 
     improved_any = false
     # Perform LS Mixing.
@@ -595,7 +610,7 @@ end
 
 function create_qgomea_mixer(f :: Function, n :: Int64, population_size :: Int64, 
     forced_improvement :: Symbol,
-    fos_type :: Symbol,
+    fos_type :: Union{Symbol, Vector{Vector{Int64}}},
     crf :: ClusteringReductionFormula,
     permutation_repair :: Symbol,
     rng :: MersenneTwister,
@@ -619,7 +634,7 @@ function optimize_qgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     population_size_base=4, 
     crf=UPGMA(), 
     forced_improvement :: Symbol = :extended,
-    fos_type :: Symbol = :distance,
+    fos_type :: Union{Symbol, Vector{Vector{Int64}}} = :distance,
     permutation_repair = :ox, 
     target_fitness :: Union{Nothing, Float64} = nothing)
     #
