@@ -15,8 +15,18 @@ t_max = 1.0 # 10 minutes, can also be set to Inf to be unbounded.
 # Set to the right value!
 e_max_lookup = Dict(
     # Format `(number of orders, number of machines) => number of evaluations,`
-    (5, 10) => 50000, 
-    (5, 15) => 150000, 
+    (100, 5) => 0,
+    (100, 10) => 0,
+    (100, 20) => 0,
+    (200, 10) => 0,
+    (200, 20) => 0,
+    (500, 20) => 0,
+    (20, 5) => 0,
+    (20, 10) => 0,
+    (20, 20) => 0,
+    (50, 5) => 0,
+    (50, 10) => 0,
+    (50, 20) => 0,
 )
 # Sidenote: An approach can converge and not use up the evaluations.
 
