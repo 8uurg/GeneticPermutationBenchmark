@@ -145,7 +145,7 @@ begin
         # Test evaluation.
         bbf(shuffle!(collect(1:instance.n)))
         # Perform GC for good measure.
-        GC.gc()
+        # GC.gc()
         # Setup performance/time trace in black box.
         trace = ProgressTrace(moments, moments_eval, 0.0)
         bbf_traced = trace_bb(bbf, trace)
