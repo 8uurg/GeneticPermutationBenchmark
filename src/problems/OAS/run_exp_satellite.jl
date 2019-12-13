@@ -7,7 +7,7 @@ using Random
 # Note: Set JULIA_NUM_THREADS to the amount of threads to use.
 
 # Number of runs, per approach, per instance
-n_exp = 10
+n_exp = 3
 # (Maximum) amount of time for each run, per instance in seconds.
 t_max = 10.0
 # (Maximum) amount of evaluations
@@ -104,13 +104,10 @@ approaches = [
 println("Reading and parsing instances")
 # Load and parse all instances.
 instances = collect(Iterators.flatten(
-    begin 
-        instance_file = open(instance_path, "r"); 
-        instance_str = read(instance_file, String);
-        close(instance_file);
+    begin
         ( (basename(instance_path), instance) 
             for (i, instance) in 
-                enumerate([parse_oas_cesaret(instance_str)]))
+                enumerate([parse_oas_cesaret(instance_path)]))
     end 
     for instance_path in instances))
 
