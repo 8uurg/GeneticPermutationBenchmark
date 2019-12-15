@@ -43,6 +43,8 @@ struct ProgressTrace
     end
 
     function ProgressTrace(moments :: Vector{Float64}, moments_n_eval :: Vector{Int64}, target :: Float64)
+        @assert issorted(moments)
+        @assert issorted(moments_n_eval)
         new(# Starting Time
             Ref(time()), 
             # Best so far
@@ -52,9 +54,9 @@ struct ProgressTrace
             fill(typemin(Float64), length(moments)), # Time
             fill(typemin(Float64), length(moments)), # # evaluations
             # Time moments to measure & current moment
-            sort(moments), Ref(1), 
+            copy(moments), Ref(1), 
             # Evaluation points to measure & current, empty for compat.
-            sort(moments_n_eval), Ref(1),
+            copy(moments_n_eval), Ref(1),
             # Target
             target, 
             # Hitting time.

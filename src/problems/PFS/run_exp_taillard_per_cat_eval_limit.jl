@@ -7,26 +7,26 @@ using Random
 # Note: Set JULIA_NUM_THREADS to the amount of threads to use.
 
 # Number of runs, per approach, per instance
-n_exp = 10
+n_exp = 1
 # (Maximum) amount of time for each run, per instance in seconds.
-t_max = 1.0 # 10 minutes, can also be set to Inf to be unbounded.
+t_max = 1.0 # 1 s, can also be set to Inf to be unbounded.
 # (Maximum) amount of evaluations
 
 # Set to the right value!
 e_max_lookup = Dict(
     # Format `(number of orders, number of machines) => number of evaluations,`
-    (100, 5) => 0,
-    (100, 10) => 0,
-    (100, 20) => 0,
-    (200, 10) => 0,
-    (200, 20) => 0,
-    (500, 20) => 0,
-    (20, 5) => 0,
-    (20, 10) => 0,
-    (20, 20) => 0,
-    (50, 5) => 0,
-    (50, 10) => 0,
-    (50, 20) => 0,
+    (100, 5)  => 235879800,
+    (100, 10) => 266211000,
+    (100, 20) => 283040000,
+    (200, 10) => 272515500,
+    (200, 20) => 287728850,
+    (500, 20) => 260316750,
+    (20, 5)   => 182224100,
+    (20, 10)  => 224784800,
+    (20, 20)  => 256896400,
+    (50, 5)   => 220712150,
+    (50, 10)  => 256208100,
+    (50, 20)  => 275954150,
 )
 # Sidenote: An approach can converge and not use up the evaluations.
 
@@ -151,19 +151,23 @@ begin
     results_eval_thread = [copy(results_eval) for _ in 1:Threads.nthreads()]
 
     experiments = collect(Iterators.product(instances, approaches, 1:n_exp))
-    
-    println("Starting experiment, running a total of $(length(experiments)) experiments on $(Threads.nthreads()) thread(s).")
 
+    println("Starting experiment, running a total of $(length(experiments)) experiments on $(Threads.nthreads()) thread(s).")
+  
+    sort!(moments)
+    
     progress = Progress(length(experiments))
     # @distributed
     Threads.@threads for ((instance_name, instance), (approach_name, optimize_approach), exp_i) in experiments
         e_max = e_max_lookup[instance.n, instance.m]
-        moments_eval = [e_max]
+        moments_eval = [e_max]  
+        sort!(moments_eval)
+
         bbf = bb_wrap_pfs(instance)
         # Test evaluation.
         bbf(shuffle!(collect(1:instance.n)))
         # Perform GC for good measure.
-        GC.gc()
+        # GC.gc()
         # Setup performance/time trace in black box.
         trace = ProgressTrace(moments, moments_eval, 0.0)
         bbf_traced = trace_bb(bbf, trace)
