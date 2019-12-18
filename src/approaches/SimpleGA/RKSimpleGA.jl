@@ -134,6 +134,8 @@ function step!(ga :: RKSimpleGA)
         if ga.generations_no_improvement[] > NIS_convergence_threshold
             ga.converged[] = true
         end
+    else
+        ga.generations_no_improvement[] = 0
     end
 end
 
