@@ -175,6 +175,7 @@ function optimize_ipsimplega(crossover :: O, fx :: Function, n :: Int64, t=10.0,
         if last_steps == 4 || length(mixers) == 0
             last_steps = 0
             push!(mixers, create_ipsimplega(f, n, next_population_size, crossover, rng, best, initial_solution_generator=initial_solution_generator))
+            # println("Created new population of size $(next_population_size)")
             next_population_size *= 2
         end
         filter!(f -> !f.converged[], mixers)

@@ -510,6 +510,7 @@ function optimize_pgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
         if last_steps == 4 || length(mixers) == 0
             last_steps = 0
             push!(mixers, create_mixer(f, n, next_population_size, forced_improvement, fos_type, crf, rng, best, initial_solution_generator=initial_solution_generator))
+            # println("Created new population of size $(next_population_size)")
             next_population_size *= 2
         end
         filter!(f -> !f.converged[], mixers)
