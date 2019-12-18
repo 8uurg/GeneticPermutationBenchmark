@@ -9,7 +9,7 @@ using Random
 # Number of runs, per approach, per instance
 # n_exp = 1
 # (Maximum) amount of time for each run, per instance in seconds.
-t_max = 1.0 # 1 s, can also be set to Inf to be unbounded.
+t_max = Inf # 1 s, can also be set to Inf to be unbounded.
 # (Maximum) amount of evaluations
 
 # Set to the right value!
