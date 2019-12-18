@@ -193,8 +193,8 @@ begin
         for (evals, fitness) in zip(trace.moments_n_eval, trace.results_eval)
             push!(results_eval_thread[Threads.threadid()], (instance_name, approach_name, exp_i + exp_idx_offset, evals, fitness))
         end
-        push!(results_time_hit_thread[Threads.threadid()], (instance_name, approach_name, exp_i + exp_idx_offset, trace.hitting_time[], instance_opt))
-        push!(results_eval_hit_thread[Threads.threadid()], (instance_name, approach_name, exp_i + exp_idx_offset, trace.hitting_eval[], instance_opt))
+        push!(results_time_hit_thread[Threads.threadid()], (instance_name, approach_name, exp_i + exp_idx_offset, trace.hitting_time, instance_opt))
+        push!(results_eval_hit_thread[Threads.threadid()], (instance_name, approach_name, exp_i + exp_idx_offset, trace.hitting_eval, instance_opt))
         next!(progress)
         # unlock(results_lock)
     end
