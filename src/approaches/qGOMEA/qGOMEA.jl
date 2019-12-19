@@ -310,10 +310,10 @@ function calcD_original_wq!(pm :: QGomeaMixer)
             c_ab = 0
             c_dist = 0
             for individual in pm.population
-                c_dist += abs(individual.perm[i] - individual.perm[j])
+                c_dist += (individual.perm[i] - individual.perm[j])^2
                 c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
             end
-            δ₁ = c_dist / (pm.n^2)
+            δ₁ = 1 - (sqrt(c_dist) / pm.n)
             δ₂ = entropy(c_ab / pm.n)
             pm.D[i, j] = δ₁ * δ₂
             pm.D[j, i] = pm.D[i, j]
