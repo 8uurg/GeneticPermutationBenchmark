@@ -160,7 +160,7 @@ end
 
 function optimize_rksimplega(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     initial_solution_generator :: Function = generate_new_RKsimplegasolution_random,
-    population_size_base=4, target_fitness :: Union{Nothing, Float64} = nothing)
+    population_size_base=16, target_fitness :: Union{Nothing, Float64} = nothing)
     #
     time_start = time()
     n_evals = 0

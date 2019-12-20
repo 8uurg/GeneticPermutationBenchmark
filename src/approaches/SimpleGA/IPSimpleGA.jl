@@ -138,7 +138,7 @@ end
 
 function optimize_ipsimplega(crossover :: O, fx :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     initial_solution_generator :: Function = generate_new_ipsimplegasolution_random,
-    population_size_base=4, target_fitness :: Union{Nothing, Float64} = nothing) where {O <: CrossoverOperator}
+    population_size_base=16, target_fitness :: Union{Nothing, Float64} = nothing) where {O <: CrossoverOperator}
     #
     time_start = time()
     n_evals = 0
