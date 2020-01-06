@@ -220,6 +220,93 @@ function findchildrenpairs(parents :: Vector{Int64})
     return result
 end
 
+
+function rewrite_by_swap_fos(fos :: Vector{Vector{Int64}},
+                             child_pairs :: Vector{Tuple{Int64, Int64}},
+                             D :: Matrix{Float64})
+    # Constants
+    n = size(D,1)
+    k = length(fos)
+    # Swaps are performed by renaming (eg. lookup table)
+    alias = collect(1:n)
+    # ΣΣD(A) for A ∈ fos
+    DF = zeros(Float64, k)
+    # Storage for D(x, A), D(x, B), D(x, A), D(y, B)
+    DxF = zeros(Float64, n, k)
+    # Safety check. Usually the fos starts in this nice manner.
+    # Which makes setting D easy. If this is not the case, error out:
+    # Setting the values this way otherwise returns the wrong result!
+    @assert all(length(fos[i]) == 1 && fos[i][1] == i for i in fos)
+    DxF[1:n, 1:n] .= D
+    # Required: Child pairs are ordered such that children occur before parents.
+    for (fos_idx_a_cup_b, (fos_idx_a, fos_idx_b)) in enumerate(child_pairs)
+        # Grab values.
+        subset_a = fos[fos_idx_a]
+        D_A = DF[fos_idx_a]
+        subset_b = fos[fos_idx_b]
+        D_B = DF[fos_idx_b]
+        # Compute ΣD(a, B)
+        for elem_a in subset_a
+            DxF[alias[elem_a], fos_idx_b] = sum(D[alias[elem_a], alias[elem_b]] for elem_b in subset_b)
+        end
+        # Compute ΣD(b, A)
+        for elem_b in subset_b
+            DxF[alias[elem_b], fos_idx_a] = sum(D[alias[elem_b], alias[elem_a]] for elem_a in subset_a)
+        end
+        # Compute ΣΣD(A, B)
+        # Currently using subset A. Can also use subset B.
+        # Maybe pick the smallest of the two. Though I doubt it matters much.
+        D_AB = sum(DxF[alias[elem_a], fos_idx_b] for elem_a in subset_a)
+        # D_AB = sum(DxF[alias[elem_b], fos_idx_a] for elem_b in subset_b)
+        
+        ## Prepare for future execution. 
+        # Compute ΣΣD(A ∪ B)
+        DF[fos_idx_a_cup_b] = D_A + D_B + 2 * D_AB
+        # Compute ΣD(x, A ∪ B)
+        subset_a_cup_b = fos[fos_idx_a_cup_b]
+        for elem_x in subset_a_cup_b
+            DxF[alias[elem_x], fos_idx_a_cup_b] = DxF[alias[elem_x], fos_idx_a] + DxF[alias[elem_x], fos_idx_b]
+        end
+
+        ## Actually evaluate swaps.
+        for elem_a in subset_a
+            for elem_b in subset_b
+                # Compute new in-set 'distances'
+                # Assuming D[i, i] = 0
+                D_A′ = D_A + -2 * DxF[alias[elem_a], fos_idx_a] + 
+                              2 * DxF[alias[elem_b], fos_idx_a] +
+                             -2 * D[alias[elem_a], alias[elem_b]] 
+                            # - D[alias[elem_b], alias[elem_b]] + D[alias[elem_a], alias[elem_a]]
+                D_B′ = D_B + -2 * DxF[alias[elem_b], fos_idx_b] +
+                              2 * DxF[alias[elem_a], fos_idx_b] +
+                             -2 * D[alias[elem_a], alias[elem_b]] 
+                            # - D[alias[elem_a], alias[elem_a]] + D[alias[elem_b], alias[elem_b]]
+                if D_A > D_A′ && D_B > D_B′
+                    # In-set distances are both smaller: swapping is an improvement.
+                    # Expensive part, update values of ΣD(x, A) and ΣD(x, B) for x ∈ A ∪ B
+                    for elem_x in subset_a_cup_b
+                        DxF[alias[elem_x], fos_idx_a] = DxF[alias[elem_x], fos_idx_a] +
+                                                        -D[alias[elem_x], alias[elem_a]] +
+                                                         D[alias[elem_x], alias[elem_b]]
+                        DxF[alias[elem_x], fos_idx_b] = DxF[alias[elem_x], fos_idx_b] +
+                                                        -D[alias[elem_x], alias[elem_b]] +
+                                                         D[alias[elem_x], alias[elem_a]]
+                    end
+                    # Update ΣΣD(A) and ΣΣD(B) to actually correspond to the swapped sets.
+                    D_A = D_A′
+                    D_B = D_B′
+                    # Finally, swap the aliases of elem_a and elem_b
+                    alias[elem_a], alias[elem_b] = alias[elem_b], alias[elem_a]
+                end
+            end
+        end
+    end
+    # 'Materialize' the new fos by performing the renames in place.
+    for subset in fos
+        map!(f -> alias[f], subset, subset)
+    end
+end
+
 ##
 # using Distances
 # using BenchmarkTools
