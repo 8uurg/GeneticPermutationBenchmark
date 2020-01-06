@@ -189,6 +189,19 @@ function LCP(D :: Matrix,
         randomized = randomized)
     return FoS
 end
+
+function export_tree_dot(FoS :: Vector{IndexSet{V}}, parent_idx :: Vector{Int64}) where {V}
+    """
+    digraph {
+        $(join([
+            string(i, "[label=\"$(join([string(i) for i in FoS[i]], ", "))\"];\n")
+        for i in 1:length(FoS)]))
+        $(join([
+            string(i, " -> ", j, ";\n") 
+            for (i,j) in enumerate(parent_idx) if j != 0]))
+    }
+    """
+end
 ##
 # using Distances
 # using BenchmarkTools
