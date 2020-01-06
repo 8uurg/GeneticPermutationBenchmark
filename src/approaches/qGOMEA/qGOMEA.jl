@@ -532,6 +532,12 @@ function step!(pm :: QGomeaMixer)
         parent_idx = zeros(Int64, 2*pm.n-1)
         fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx)
         #fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx, randomized=true)
+        # if length(pm.population) == 64
+        #     open("qgomea_fos_$(pm.generations[]).dot", "w") do f
+        #         write(f, export_tree_dot(fos_indexset, parent_idx))
+        #     end
+        # end
+
         append!(pm.fos, collect(a) for (i,a) in enumerate(fos_indexset))
     end
 
