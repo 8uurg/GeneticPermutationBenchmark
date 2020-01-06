@@ -267,24 +267,6 @@ function calcD_random!(pm :: PGomeaMixer)
     pm.D
 end
 
-
-function findchildrenpairs(parents :: Vector{Int64})
-    idx = zero(parents)
-    result = Vector{Pair{Int64, Tuple{Int64, Int64}}}()
-    for (me, parent) in enumerate(parents)
-        if parent == 0
-            # Final node, does not have a parent.
-            continue
-        end
-        if idx[parent] == 0
-            idx[parent] = me
-        else
-            push!(result, parent => (idx[parent], me))
-        end
-    end
-    return result
-end
-
 function edamixing(sol :: PGomeaSolution, pm :: PGomeaMixer; shuffle_fos=true, donor_fixed :: Union{Nothing, Ref{PGomeaSolution}} = nothing)
     # Shuffle if required.
     if shuffle_fos

@@ -372,24 +372,6 @@ function calcD_random!(pm :: QGomeaMixer)
     pm.D
 end
 
-
-function findchildrenpairs(parents :: Vector{Int64})
-    idx = zero(parents)
-    result = Vector{Pair{Int64, Tuple{Int64, Int64}}}()
-    for (me, parent) in enumerate(parents)
-        if parent == 0
-            # Final node, does not have a parent.
-            continue
-        end
-        if idx[parent] == 0
-            idx[parent] = me
-        else
-            push!(result, parent => (idx[parent], me))
-        end
-    end
-    return result
-end
-
 function lsmixing(pm :: QGomeaMixer,
     parentChild :: Vector{Pair{Int64, Tuple{Int64, Int64}}};
     shuffle_parent_child = true)
