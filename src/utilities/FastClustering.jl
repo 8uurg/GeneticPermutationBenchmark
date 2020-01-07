@@ -220,13 +220,14 @@ function findchildrenpairs(parents :: Vector{Int64})
     return result
 end
 
-
+##
 function rewrite_by_swap_fos(fos :: Vector{Vector{Int64}},
-                             child_pairs :: Vector{Tuple{Int64, Int64}},
+                             child_pairs :: Vector{Pair{Int64, Tuple{Int64, Int64}}},
                              D :: Matrix{Float64})
     # Constants
     n = size(D,1)
     k = length(fos)
+    swap_count = 0
     # Swaps are performed by renaming (eg. lookup table)
     alias = collect(1:n)
     # ΣΣD(A) for A ∈ fos
@@ -236,10 +237,10 @@ function rewrite_by_swap_fos(fos :: Vector{Vector{Int64}},
     # Safety check. Usually the fos starts in this nice manner.
     # Which makes setting D easy. If this is not the case, error out:
     # Setting the values this way otherwise returns the wrong result!
-    @assert all(length(fos[i]) == 1 && fos[i][1] == i for i in fos)
+    @assert all(length(fos[i]) == 1 && fos[i][1] == i for i in 1:n)
     DxF[1:n, 1:n] .= D
     # Required: Child pairs are ordered such that children occur before parents.
-    for (fos_idx_a_cup_b, (fos_idx_a, fos_idx_b)) in enumerate(child_pairs)
+    for (fos_idx_a_cup_b, (fos_idx_a, fos_idx_b)) in child_pairs
         # Grab values.
         subset_a = fos[fos_idx_a]
         D_A = DF[fos_idx_a]
@@ -297,10 +298,13 @@ function rewrite_by_swap_fos(fos :: Vector{Vector{Int64}},
                     D_B = D_B′
                     # Finally, swap the aliases of elem_a and elem_b
                     alias[elem_a], alias[elem_b] = alias[elem_b], alias[elem_a]
+                    # Keep some statistics.
+                    swap_count +=1
                 end
             end
         end
     end
+    #println(swap_count)
     # 'Materialize' the new fos by performing the renames in place.
     for subset in fos
         map!(f -> alias[f], subset, subset)
