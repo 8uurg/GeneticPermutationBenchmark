@@ -302,13 +302,19 @@ function rewrite_by_swap_fos(fos :: Vector{Vector{Int64}},
                     D_B = D_B′
                     # Finally, swap the aliases of elem_a and elem_b
                     alias[elem_a], alias[elem_b] = alias[elem_b], alias[elem_a]
+                    # Sanity verification, don't enable if you want to save time.
+                    # @assert D_A ≈ sum(D[alias[elem_x], alias[elem_y]] for elem_x in subset_a for elem_y in subset_a)
+                    # @assert D_B ≈ sum(D[alias[elem_x], alias[elem_y]] for elem_x in subset_b for elem_y in subset_b)
+                    # if swap_count == 0
+                    #    println("Swapping $(alias[elem_a]) with $(alias[elem_b]).\nD_A ($D_A) -> D_A′ ($D_A′)\nD_B ($D_B) -> D_B′ ($D_B′)")
+                    # end
                     # Keep some statistics.
                     swap_count +=1
                 end
             end
         end
     end
-    #println(swap_count)
+    # println(swap_count)
     # 'Materialize' the new fos by performing the renames in place.
     for subset in fos
         map!(f -> alias[f], subset, subset)
