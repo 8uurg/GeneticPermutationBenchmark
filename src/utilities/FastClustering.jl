@@ -357,9 +357,18 @@ end
 # n = size(points,2)
 # es = _div64(n)+1
 # FoS = sizehint!(Vector{IndexSet{es}}(undef, 0), n*2)
-
-# LCP!!(copy(D), copy(FoS), UPGMA())
+# ptx = Int64[]
+# sizehint!(ptx, 2n)
+# fos = LCP(D, UPGMA(), MersenneTwister(); parent_idx=ptx)
+# tfos = [[convert(Int64, a) for a in f] for f in fos]
+# child_pairs = findchildrenpairs(ptx)
+# bench = @benchmarkable rewrite_by_swap_fos(copy(test_fos), child_pairs, M) setup=begin
+#     M, test_fos, child_pairs = deepcopy($D), [copy(t) for t in tfos], deepcopy($child_pairs)
+# end evals=1
 # Profile.clear_malloc_data()
-# #@profiler LCP!!!(copy(D), copy(FoS), UPGMA())
-# bm = @profiler @benchmark LCP($(D), SingleLinkage())
+# Profile.@profile run(bench)
+
+# rewrite_by_swap_fos([copy(t) for t in tfos], child_pairs, D)
+
+# bm = @profiler @benchmark LCP($(D), UPGMA(), rng; parent_idx=ptx)
 # display(bm)
