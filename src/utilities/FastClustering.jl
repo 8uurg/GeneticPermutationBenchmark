@@ -176,7 +176,7 @@ end
 
 function LCP(D :: Matrix,
         crf :: T,
-        rng :: MersenneTwister = Random.GLOBAL_RNG;
+        rng :: MersenneTwister = MersenneTwister();
         merge_distance :: Union{Nothing, Vector{Float64}} = nothing,
         parent_idx :: Union{Nothing, Vector{Int64}} = nothing,
         randomized :: Bool = false) where {T <: ClusteringReductionFormula, V <: Any}
@@ -311,7 +311,31 @@ function rewrite_by_swap_fos(fos :: Vector{Vector{Int64}},
     end
 end
 
+
 ##
+# using BenchmarkTools
+
+# Simply for testing!
+# function create_random_distance_matrix(n :: Int64)
+#     M = collect(Symmetric(rand(Float64, n, n)))
+#     M[diagind(M)] .= 0
+#     return M
+# end
+
+# function generate_random_test_fos(n :: Int64)
+#     M = create_random_distance_matrix(n)
+#     pdx=Int64[]
+#     fos_set = LCP(M, UPGMA(), MersenneTwister(); parent_idx=pdx)
+#     return M, [[convert(Int64, a) for a in f] for f in fos_set], findchildrenpairs(pdx))
+# end
+
+
+# bench = @benchmarkable rewrite_by_swap_fos(test_fos, child_pairs, M) setup=begin
+#     M, test_fos, child_pairs = generate_random_test_fos(100)
+# end
+# run(bench)
+
+# @benchmark generate_random_test_fos(100)
 # using Distances
 # using BenchmarkTools
 # import Profile
