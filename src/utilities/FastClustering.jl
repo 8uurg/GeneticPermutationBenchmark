@@ -270,6 +270,10 @@ function rewrite_by_swap_fos(fos :: Vector{Vector{Int64}},
         end
 
         ## Actually evaluate swaps.
+        if length(subset_a) <= 2 && length(subset_b) <= 2
+            # But skip the trivial cases.
+            continue
+        end
         for elem_a in subset_a
             for elem_b in subset_b
                 # Compute new in-set 'distances'
