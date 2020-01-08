@@ -303,6 +303,23 @@ function calcD_original!(pm :: QGomeaMixer)
     pm.D
 end
 
+function calcD_order!(pm :: QGomeaMixer)
+    fill!(pm.D, zero(Float64))
+    @inbounds for i in 1:pm.n
+        for j in i+1:pm.n
+            c_ab = 0
+            for individual in pm.population
+                c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
+            end
+            δ₂ = 1 - entropy(c_ab / pm.n)
+            pm.D[i, j] = δ₂
+            pm.D[j, i] = pm.D[i, j]
+        end
+    end
+    #pm.D .= maximum(pm.D) .- pm.D
+    pm.D
+end
+
 function calcD_original_wq!(pm :: QGomeaMixer)
     fill!(pm.D, zero(Float64))
     @inbounds for i in 1:pm.n
@@ -485,12 +502,28 @@ function step!(pm :: QGomeaMixer)
     #println([a.fitness for a in sort(pm.population, rev=true)[1:10]])
     # Calculate D depending on the population.
     is_linkage_tree = false
+    is_swapping = false
     if pm.fos_type == :distance
         calcD!(pm)
         is_linkage_tree = true
+    elseif pm.fos_type == :distance_swap
+        calcD!(pm)
+        is_linkage_tree = true
+        is_swapping = true
     elseif pm.fos_type == :original
         calcD_original!(pm)
         is_linkage_tree = true
+    elseif pm.fos_type == :original_swap
+        calcD_original!(pm)
+        is_linkage_tree = true
+        is_swapping = true
+    elseif pm.fos_type == :order
+        calcD_order!(pm)
+        is_linkage_tree = true
+    elseif pm.fos_type == :order_swap
+        calcD_order!(pm)
+        is_linkage_tree = true
+        is_swapping = true
     elseif pm.fos_type == :random
         calcD_random!(pm)
         is_linkage_tree = true
@@ -512,15 +545,18 @@ function step!(pm :: QGomeaMixer)
     if is_linkage_tree
         empty!(pm.fos)
         parent_idx = zeros(Int64, 2*pm.n-1)
-        fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx)
-        #fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx, randomized=true)
+        #fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx)
+        fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx, randomized=true)
+        append!(pm.fos, collect(a) for (i,a) in enumerate(fos_indexset))
+        if is_swapping
+           rewrite_by_swap_fos(pm.fos, findchildrenpairs(parent_idx), pm.D)
+        end
         # if length(pm.population) == 64
         #     open("qgomea_fos_$(pm.generations[]).dot", "w") do f
         #         write(f, export_tree_dot(fos_indexset, parent_idx))
         #     end
         # end
 
-        append!(pm.fos, collect(a) for (i,a) in enumerate(fos_indexset))
     end
 
     improved_any = false
