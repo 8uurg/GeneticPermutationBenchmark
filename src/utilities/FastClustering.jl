@@ -234,11 +234,21 @@ function rewrite_by_swap_fos(fos :: Vector{Vector{Int64}},
     DF = zeros(Float64, k)
     # Storage for D(x, A), D(x, B), D(x, A), D(y, B)
     DxF = zeros(Float64, n, k)
-    # Safety check. Usually the fos starts in this nice manner.
-    # Which makes setting D easy. If this is not the case, error out:
-    # Setting the values this way otherwise returns the wrong result!
-    @inbounds @assert all(length(fos[i]) == 1 && fos[i][1] == i for i in 1:n)
-    @inbounds DxF[1:n, 1:n] .= D
+    # @inbounds if all(length(fos[i]) == 1 && fos[i][1] == i for i in 1:n)
+        # Only works for linkage tree starting with [1], [2], ..., [n-1], [n]
+        # DxF[1:n, 1:n] .= D
+    # else
+    # Works for any Linkage Tree
+    @inbounds for (x, f1) in enumerate(fos)
+        if length(f1) == 1
+            for (y, f2) in enumerate(fos)
+                if length(f2) == 1
+                    DxF[x, y] = D[first(f1), first(f2)]
+                end
+            end
+        end
+    end
+    # end
     # Required: Child pairs are ordered such that children occur before parents.
     @inbounds for (fos_idx_a_cup_b, (fos_idx_a, fos_idx_b)) in child_pairs
         # Grab values.
@@ -367,8 +377,8 @@ end
 # end evals=1
 # Profile.clear_malloc_data()
 # Profile.@profile run(bench)
-
-# rewrite_by_swap_fos([copy(t) for t in tfos], child_pairs, D)
+# ctfos = [copy(t) for t in tfos]
+# rewrite_by_swap_fos(ctfos, child_pairs, D)
 
 # bm = @profiler @benchmark LCP($(D), UPGMA(), rng; parent_idx=ptx)
 # display(bm)
