@@ -335,12 +335,21 @@ function step!(pm :: PGomeaMixer)
 
     # Calculate D -- the Dependency Matrix -- using the population.
     is_linkage_tree = false
+    is_swapping = false
     if pm.fos_type == :distance
         calcD!(pm)
         is_linkage_tree = true
+    elseif pm.fos_type == :distance_swap
+        calcD!(pm)
+        is_linkage_tree = true
+        is_swapping = true
     elseif pm.fos_type == :original
         calcD_original!(pm)
         is_linkage_tree = true
+    elseif pm.fos_type == :original_swap
+        calcD_original!(pm)
+        is_linkage_tree = true
+        is_swapping = true
     elseif pm.fos_type == :random
         calcD_random!(pm)
         is_linkage_tree = true
@@ -361,9 +370,12 @@ function step!(pm :: PGomeaMixer)
     if is_linkage_tree
         empty!(pm.fos)
         parent_idx = zeros(Int64, 2*pm.n-1)
-        fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx)
-        #fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx, randomized=true)
+        #fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx)
+        fos_indexset = LCP(pm.D, pm.crf, pm.rng; parent_idx=parent_idx, randomized=true)
         append!(pm.fos, collect(a) for (i,a) in enumerate(fos_indexset))
+        if is_swapping
+            rewrite_by_swap_fos(pm.fos, findchildrenpairs(parent_idx), pm.D)
+        end
     end
 
     improved_any = false
