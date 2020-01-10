@@ -138,7 +138,7 @@ end
 
 function optimize_ipsimplega(crossover :: O, fx :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     initial_solution_generator :: Function = generate_new_ipsimplegasolution_random,
-    population_size_base=16, target_fitness :: Union{Nothing, Float64} = nothing) where {O <: CrossoverOperator}
+    population_size_base=16, population_sizing_factor :: Int64 = 8, target_fitness :: Union{Nothing, Float64} = nothing) where {O <: CrossoverOperator}
     #
     time_start = time()
     n_evals = 0
@@ -162,7 +162,7 @@ function optimize_ipsimplega(crossover :: O, fx :: Function, n :: Int64, t=10.0,
 
         for i_mixer in 1:length(mixers)
             # Other steps!
-            if mod(steps, 4^(i_mixer-1)) != 0
+            if mod(steps, population_sizing_factor^(i_mixer-1)) != 0
                 break
             end
             if i_mixer == length(mixers)
