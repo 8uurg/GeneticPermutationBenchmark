@@ -270,6 +270,27 @@ function calcD!(pm :: QGomeaMixer)
     pm.D
 end
 
+function calcD_spread!(pm :: QGomeaMixer)
+    fill!(pm.D, zero(Float64))
+
+    # f_min, f_max = extrema(individual.fitness for individual in pm.population)
+    
+    # if f_min == f_max
+    #     f_max = first(pm.population).fitness
+    #     f_min = 0
+    # end
+    
+    @inbounds for i in 1:pm.n
+        for j in i+1:pm.n
+            dist_lower, dist_median, dist_upper = quantile((((individual.perm[i] - individual.perm[j])/pm.n)^2 for individual in pm.population), [0.1, 0.5, 0.9])
+            pm.D[i, j] = 2.0 / (1.0 + dist_upper - dist_lower) * dist_median
+            pm.D[j, i] = pm.D[i, j]
+        end
+    end
+    #pm.D .= maximum(pm.D) .- pm.D
+    pm.D
+end
+
 function entropy(x) 
     if x > 0.0 && x < 1.0 
         return -x * log2(x) + - (1.0-x) * log2(1.0-x)
@@ -510,6 +531,12 @@ function step!(pm :: QGomeaMixer)
         calcD!(pm)
         is_linkage_tree = true
         is_swapping = true
+    elseif pm.fos_type == :distance_spread
+        calcD_spread!(pm)
+        is_linkage_tree = true
+    elseif pm.fos_type == :distance_spread_swap
+        calcD_spread!(pm)
+        is_linkage_tree = true
     elseif pm.fos_type == :original
         calcD_original!(pm)
         is_linkage_tree = true
