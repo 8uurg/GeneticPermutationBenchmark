@@ -176,3 +176,8 @@ function bb_wrap_biv(instance :: BIVInstance)
     end
     return evaluate
 end
+
+#
+function generate_good_fos_sorted_inversion(n :: Int64)
+    return vcat([[i] for i in 1:n], [[i,i+1] for i in 1:n-1])
+end
