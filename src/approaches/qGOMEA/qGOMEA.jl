@@ -1,6 +1,7 @@
 using Random
 import Statistics:quantile
 include("../../utilities/FastClustering.jl")
+include("../populationsizingscheme.jl")
 
 ## Inverse permutation with preset location
 function invperm!(dst :: Vector{Int64}, src :: Vector{Int64})
@@ -702,7 +703,7 @@ end
 
 function optimize_qgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     initial_solution_generator :: Function = generate_new_qgomeasolution_random,
-    population_size_base=4, 
+    population_size_base=4, population_sizing_step_factor :: Int64 = 4
     crf=UPGMA(), 
     forced_improvement :: Symbol = :extended,
     fos_type :: Union{Symbol, Vector{Vector{Int64}}} = :distance,
@@ -727,14 +728,13 @@ function optimize_qgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     steps = 0
     last_steps = 0
     best = initial_mixer.best
+    upto_gen = SubpopulationStepcountGenerator(population_sizing_step_factor)
 
     while (time() - time_start < t) && (n_evals <= e) && best[].fitness != target_fitness
+        upto_mixer, _ = iterate(upto_gen)
+        upto_mixer = min(upto_mixer, length(mixers))
 
-        for i_mixer in 1:length(mixers)
-            # Other steps!
-            if mod(steps, 4^(i_mixer-1)) != 0
-                break
-            end
+        for i_mixer in 1:upto_mixer
             if i_mixer == length(mixers)
                 last_steps += 1
             end
@@ -744,9 +744,10 @@ function optimize_qgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
 
         # Add new metaheuristic upon having stepped the last one 4 times.
         # Or if all have converged. Oh well.
-        if last_steps == 4 || length(mixers) == 0
+        if last_steps == population_sizing_step_factor || length(mixers) == 0
             last_steps = 0
             push!(mixers, create_qgomea_mixer(f, n, next_population_size, forced_improvement, fos_type, crf, permutation_repair, rng, best, initial_solution_generator=initial_solution_generator))
+            step!(mixers[end])
             # println("Created new population of size $(next_population_size)")
             next_population_size *= 2
         end
