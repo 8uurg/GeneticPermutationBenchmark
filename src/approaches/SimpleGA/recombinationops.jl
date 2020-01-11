@@ -160,9 +160,15 @@ function crossover_OX!(dst1 :: Vector{Int64}, dst2 :: Vector{Int64}, parent1 :: 
     return #dst1, dst2
 end
 
-function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, adj :: Matrix{Int64}, cnt :: Vector{Int64}, rng :: MersenneTwister, ring :: Bool = true)
+function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :: Vector{Int64}, adj :: Matrix{Int64}, cnt :: Vector{Int64}, remaining :: Vector{Int64}, remaining_lut :: Vector{Int64}, rng :: MersenneTwister, ring :: Bool = true)
     #
     n = length(parent1)
+    # Prepare remaining list and lut.
+    @inbounds for i in 1:n
+        remaining[i] = i
+        remaining_lut[i] = i
+    end
+    remaining_c = n
     # Create adjacency matrix, 2 parents = maximum of 4 adjacent elements.
     # Predecessor and successor in a single solution are always unique. (No need to check!)
     fill!(cnt, 0)
@@ -205,10 +211,10 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
 
     # Construct a solution. Starting from the starting point of one of the two parents
     # selected at random.
-    c = rand(rng, (parent1[1], parent2[1]))
-    dst[1] = c
+    @inbounds c = rand(rng, (parent1[1], parent2[1]))
+    @inbounds dst[1] = c
     # Update adjacency matrix of each neighbour
-    for ni in 1:cnt[c]
+    @inbounds for ni in 1:cnt[c]
         # Neighbour `n`
         nb = adj[c, ni]
         # Find index of ci.
@@ -226,9 +232,15 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
         end
     end
     # Mark as selected
-    cnt[c] = -1
+    @inbounds cnt[c] = -1
+    # Move the last unselected item
+    # to the position of the selected element
+    # and 'mark' the last spot as selected.
+    @inbounds remaining[remaining_lut[c]] = remaining[remaining_c]
+    @inbounds remaining_lut[remaining[remaining_c]] = remaining_lut[c]
+    remaining_c -= 1
     # Do the same thing for the remaining elements
-    for i in 2:n
+    @inbounds for i in 2:n
         # Find the element with smallest count
         # and randomly pick from the set of the elements with smallest count.
         nxt = 0
@@ -244,7 +256,7 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
                 w += 1
                 # Current item is the result of a sample over w-1 items.
                 # Probability the next one should be selected is 1.0/w
-                if rand(rng, Float64) < 1.0/w
+                if rand(rng, Float64) < 1.0/convert(Float64, w)
                     nxt = p
                 end
             end
@@ -253,20 +265,15 @@ function crossover_ER!(dst :: Vector{Int64}, parent1 :: Vector{Int64}, parent2 :
         # No neighbouring elements...
         # Select an unselected one at random instead.
         if nxt == 0
-            w = 0
-            for i in 1:n
-                if cnt[i] == -1
-                    continue
-                end
-                w += 1
-                if rand(rng) < 1.0/w
-                    nxt = i
-                end
-            end
+            w = rand(rng, 1:remaining_c)
+            nxt = remaining[w]
         end
         # Next element has been chosen!
         c = nxt
         dst[i] = c
+        remaining[remaining_lut[c]] = remaining[remaining_c]
+        remaining_lut[remaining[remaining_c]] = remaining_lut[c]
+        remaining_c -= 1
 
         # Update adjacency matrix of each neighbour
         for ni in 1:cnt[c]
@@ -353,9 +360,11 @@ end
 struct ER <: CrossoverOperator
     adj :: Matrix{Int64}
     cnt :: Vector{Int64}
+    remaining :: Vector{Int64}
+    remaining_lut :: Vector{Int64}
 
     function ER(n :: Int64)
-        new(zeros(Int64, (n, 4)), zeros(Int64, n))
+        new(zeros(Int64, (n, 4)), zeros(Int64, n), collect(1:n), collect(1:n))
     end
 end
 
@@ -367,7 +376,7 @@ function crossover!(operator :: ER,
                     rng :: MersenneTwister)
     # Two crossovers, as Edge Recombination Crossover does not really have
     # have an obvious way to obtain two 'opposite' offspring
-    crossover_ER!(offspring1, parent1, parent2, operator.adj, operator.cnt, rng, true)
-    crossover_ER!(offspring2, parent1, parent2, operator.adj, operator.cnt, rng, true)
+    crossover_ER!(offspring1, parent1, parent2, operator.adj, operator.cnt, operator.remaining, operator.remaining_lut, rng, true)
+    crossover_ER!(offspring2, parent1, parent2, operator.adj, operator.cnt, operator.remaining, operator.remaining_lut, rng, true)
     return #(offspring1, offspring2)
 end
