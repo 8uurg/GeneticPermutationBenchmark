@@ -703,7 +703,7 @@ end
 
 function optimize_qgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     initial_solution_generator :: Function = generate_new_qgomeasolution_random,
-    population_size_base=4, population_sizing_step_factor :: Int64 = 4
+    population_size_base=4, population_sizing_step_factor :: Int64 = 4,
     crf=UPGMA(), 
     forced_improvement :: Symbol = :extended,
     fos_type :: Union{Symbol, Vector{Vector{Int64}}} = :distance,
