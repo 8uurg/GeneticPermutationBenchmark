@@ -222,6 +222,24 @@ function calcD_original!(pm :: PGomeaMixer)
     pm.D
 end
 
+function calcD_order!(pm :: PGomeaMixer)
+    fill!(pm.D, zero(Float64))
+    @inbounds for i in 1:pm.n
+        for j in i+1:pm.n
+            c_ab = 0
+            psize = length(pm.population)
+            for individual in pm.population
+                c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
+            end
+            δ₂ = 1 - entropy(c_ab / psize)
+            pm.D[i, j] = δ₂
+            pm.D[j, i] = pm.D[i, j]
+        end
+    end
+    #pm.D .= maximum(pm.D) .- pm.D
+    pm.D
+end
+
 function calcD_original_regularized!(pm :: PGomeaMixer)
     fill!(pm.D, zero(Float64))
     @inbounds for i in 1:pm.n
@@ -334,6 +352,13 @@ function step!(pm :: PGomeaMixer)
         is_linkage_tree = true
     elseif pm.fos_type == :original_swap
         calcD_original!(pm)
+        is_linkage_tree = true
+        is_swapping = true
+    elseif pm.fos_type == :order
+        calcD_order!(pm)
+        is_linkage_tree = true
+    elseif pm.fos_type == :order_swap
+        calcD_order!(pm)
         is_linkage_tree = true
         is_swapping = true
     elseif pm.fos_type == :random
