@@ -200,38 +200,19 @@ double_entropy(x) = entropy(entropy(x))
 weighted_once_inv_double_entropy(x, w=0.5) = w*entropy(x)+(1.0-w)*(1.0-entropy(entropy(x)))
 inv_weighted_once_inv_double_entropy(x, w=0.5) = 1.0 - weighted_once_inv_double_entropy(x, w)
 
-function calcD_original_pw!(pm :: PGomeaMixer)
-    fill!(pm.D, zero(Float64))
-    @inbounds for i in 1:pm.n
-        for j in i+1:pm.n
-            c_ab = 0
-            c_dist = 0
-            for individual in pm.population
-                c_dist += abs(individual.perm[i] - individual.perm[j])
-                c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
-            end
-            δ₁ = c_dist / (pm.n^2)
-            δ₂ = entropy(c_ab / pm.n)
-            pm.D[i, j] = δ₁ * δ₂
-            pm.D[j, i] = pm.D[i, j]
-        end
-    end
-    #pm.D .= maximum(pm.D) .- pm.D
-    pm.D
-end
-
 function calcD_original!(pm :: PGomeaMixer)
     fill!(pm.D, zero(Float64))
     @inbounds for i in 1:pm.n
         for j in i+1:pm.n
             c_ab = 0
             c_dist = 0
+            psize = length(pm.population)
             for individual in pm.population
                 c_dist += (individual.perm[i] - individual.perm[j])^2
                 c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
             end
-            δ₁ = 1 - (sqrt(c_dist) / pm.n)
-            δ₂ = 1 - entropy(c_ab / pm.n)
+            δ₁ = 1 - (sqrt(c_dist) / psize)
+            δ₂ = 1 - entropy(c_ab / psize)
             # Invert direction.
             pm.D[i, j] = -1 * δ₁ * δ₂
             pm.D[j, i] = pm.D[i, j]
@@ -247,12 +228,13 @@ function calcD_original_regularized!(pm :: PGomeaMixer)
         for j in i+1:pm.n
             c_ab = 0
             c_dist = 0
+            psize = length(pm.population)
             for individual in pm.population
                 c_dist += abs(individual.perm[i] - individual.perm[j])
                 c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
             end
-            δ₁ = c_dist / (pm.n^2)
-            δ₂ = inv_weighted_once_inv_double_entropy(c_ab / pm.n, 0.3) + 0.3
+            δ₁ = c_dist / (psize^2)
+            δ₂ = inv_weighted_once_inv_double_entropy(c_ab / psize, 0.3) + 0.3
             pm.D[i, j] = δ₁ * δ₂
             pm.D[j, i] = pm.D[i, j]
         end
