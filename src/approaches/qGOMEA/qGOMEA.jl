@@ -283,7 +283,8 @@ function calcD_spread!(pm :: QGomeaMixer)
     
     @inbounds for i in 1:pm.n
         for j in i+1:pm.n
-            dist_lower, dist_median, dist_upper = quantile((((individual.perm[i] - individual.perm[j])/pm.n)^2 for individual in pm.population), [0.1, 0.5, 0.9])
+            psize = length(pm.population)
+            dist_lower, dist_median, dist_upper = quantile((((individual.perm[i] - individual.perm[j])/psize)^2 for individual in pm.population), [0.1, 0.5, 0.9])
             pm.D[i, j] = 2.0 / (1.0 + dist_upper - dist_lower) * dist_median
             pm.D[j, i] = pm.D[i, j]
         end
@@ -311,12 +312,13 @@ function calcD_original!(pm :: QGomeaMixer)
         for j in i+1:pm.n
             c_ab = 0
             c_dist = 0
+            psize = length(pm.population)
             for individual in pm.population
                 c_dist += abs(individual.perm[i] - individual.perm[j])
                 c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
             end
-            δ₁ = 1 - c_dist / (pm.n^2)
-            δ₂ = 1 - entropy(c_ab / pm.n)
+            δ₁ = 1 - c_dist / (psize^2)
+            δ₂ = 1 - entropy(c_ab / psize)
             pm.D[i, j] = -1 * δ₁ * δ₂
             pm.D[j, i] = pm.D[i, j]
         end
@@ -330,10 +332,11 @@ function calcD_order!(pm :: QGomeaMixer)
     @inbounds for i in 1:pm.n
         for j in i+1:pm.n
             c_ab = 0
+            psize = length(pm.population)
             for individual in pm.population
                 c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
             end
-            δ₂ = 1 - entropy(c_ab / pm.n)
+            δ₂ = 1 - entropy(c_ab / psize)
             pm.D[i, j] = δ₂
             pm.D[j, i] = pm.D[i, j]
         end
@@ -348,12 +351,13 @@ function calcD_original_wq!(pm :: QGomeaMixer)
         for j in i+1:pm.n
             c_ab = 0
             c_dist = 0
+            psize = length(pm.population)
             for individual in pm.population
                 c_dist += (individual.perm[i] - individual.perm[j])^2
                 c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
             end
-            δ₁ = 1 - (sqrt(c_dist) / pm.n)
-            δ₂ = entropy(c_ab / pm.n)
+            δ₁ = 1 - (sqrt(c_dist) / psize)
+            δ₂ = entropy(c_ab / psize)
             pm.D[i, j] = δ₁ * δ₂
             pm.D[j, i] = pm.D[i, j]
         end
@@ -368,12 +372,13 @@ function calcD_original_invd2!(pm :: QGomeaMixer)
         for j in i+1:pm.n
             c_ab = 0
             c_dist = 0
+            psize = length(pm.population)
             for individual in pm.population
                 c_dist += abs(individual.perm[i] - individual.perm[j])
                 c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
             end
-            δ₁ = c_dist / (pm.n^2)
-            δ₂ = 1.0 - entropy(c_ab / pm.n)
+            δ₁ = c_dist / (psize^2)
+            δ₂ = 1.0 - entropy(c_ab / psize)
             pm.D[i, j] = δ₁ * δ₂
             pm.D[j, i] = pm.D[i, j]
         end
@@ -387,12 +392,13 @@ function calcD_original_regularized!(pm :: QGomeaMixer)
         for j in i+1:pm.n
             c_ab = 0
             c_dist = 0
+            psize = length(pm.population)
             for individual in pm.population
                 c_dist += abs(individual.perm[i] - individual.perm[j])
                 c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
             end
-            δ₁ = c_dist / (pm.n^2)
-            δ₂ = inv_weighted_once_inv_double_entropy(c_ab / pm.n, 0.3) + 0.3
+            δ₁ = c_dist / (psize^2)
+            δ₂ = inv_weighted_once_inv_double_entropy(c_ab / psize, 0.3) + 0.3
             pm.D[i, j] = δ₁ * δ₂
             pm.D[j, i] = pm.D[i, j]
         end
