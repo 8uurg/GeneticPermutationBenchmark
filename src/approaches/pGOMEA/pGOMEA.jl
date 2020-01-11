@@ -105,6 +105,7 @@ struct PGomeaMixer
     # Internal config.
     forced_improvement :: Symbol
     fos_type :: Union{Symbol, Vector{Vector{Int64}}}
+    rescale_probability :: Float64
     crf :: ClusteringReductionFormula
     # Stats & info
     best :: Ref{PGomeaSolution}
@@ -129,11 +130,12 @@ struct PGomeaMixer
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
         fos_type :: Union{Symbol, Vector{Vector{Int64}}},
+        rescale_probability :: Float64,
         crf :: ClusteringReductionFormula,
         rng :: MersenneTwister)
         #
         new(f, n, population, D, fos,
-            forced_improvement, fos_type, crf,
+            forced_improvement, fos_type, rescale_probability, crf,
             Ref(maximum(population)),
             Ref(0), Ref(0), Ref(false),
             collect(1:n), 
@@ -149,13 +151,14 @@ struct PGomeaMixer
         fos :: Vector{Vector{Int64}},
         forced_improvement :: Symbol,
         fos_type :: Union{Symbol, Vector{Vector{Int64}}},
+        rescale_probability :: Float64,
         crf :: ClusteringReductionFormula,
         best :: Ref{PGomeaSolution},
         rng :: MersenneTwister)
         #
         best[] = max(best[], maximum(population))
         new(f, n, population, D, fos,
-            forced_improvement, fos_type, crf,
+            forced_improvement, fos_type, rescale_probability, crf,
             best,
             Ref(0), Ref(0), Ref(false),
             collect(1:n), 
@@ -297,7 +300,7 @@ function edamixing(sol :: PGomeaSolution, pm :: PGomeaMixer; shuffle_fos=true, d
 
         mix!(pm.mixing_backup, donor, s)
 
-        if rand(pm.rng) < 0.1
+        if rand(pm.rng) < pm.rescale_probability
             random_rescale!(pm.mixing_backup, s, pm.rng)
         end
         
@@ -463,6 +466,7 @@ end
 function create_mixer(f :: Function, n :: Int64, population_size :: Int64, 
     forced_improvement :: Symbol,
     fos_type :: Union{Symbol, Vector{Vector{Int64}}},
+    rescale_probability :: Float64,
     crf :: ClusteringReductionFormula,
     rng :: MersenneTwister,
     best :: Union{Nothing, Ref{PGomeaSolution}} = nothing;
@@ -474,15 +478,16 @@ function create_mixer(f :: Function, n :: Int64, population_size :: Int64,
     fos = Vector{Vector{Int64}}()
     sizehint!(fos, 2*n)
     if best === nothing
-        return PGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, crf, rng)
+        return PGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, rescale_probability, crf, rng)
     else
-        return PGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, crf, best, rng)
+        return PGomeaMixer(f, n, population, D, fos, forced_improvement, fos_type, rescale_probability, crf, best, rng)
     end
 end
 
 function optimize_pgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     initial_solution_generator :: Function = generate_new_pgomeasolution_random,
     population_size_base=4, population_sizing_step_factor :: Int64 = 4,
+    rescale_probability :: Float64 = 0.1,
     crf=UPGMA(),
     forced_improvement :: Symbol = :extended,
     fos_type :: Union{Symbol, Vector{Vector{Int64}}} = :original,
@@ -501,7 +506,7 @@ function optimize_pgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
 
     next_population_size = population_size_base*2
 
-    initial_mixer = create_mixer(f, n, population_size_base, forced_improvement, fos_type, crf, rng, initial_solution_generator=initial_solution_generator)
+    initial_mixer = create_mixer(f, n, population_size_base, forced_improvement, fos_type, rescale_probability, crf, rng, initial_solution_generator=initial_solution_generator)
     mixers = PGomeaMixer[initial_mixer]
     steps = 0
     last_steps = 0
@@ -524,7 +529,7 @@ function optimize_pgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
         # Or if all have converged. Oh well.
         if last_steps == population_sizing_step_factor || length(mixers) == 0
             last_steps = 0
-            push!(mixers, create_mixer(f, n, next_population_size, forced_improvement, fos_type, crf, rng, best, initial_solution_generator=initial_solution_generator))
+            push!(mixers, create_mixer(f, n, next_population_size, forced_improvement, fos_type, rescale_probability, crf, rng, best, initial_solution_generator=initial_solution_generator))
             step!(mixers[end])
             # println("Created new population of size $(next_population_size)")
             next_population_size *= 2
