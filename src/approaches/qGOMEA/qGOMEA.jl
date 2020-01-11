@@ -96,6 +96,17 @@ function create_differential_donor!(dst :: Vector{Int64}, orig_dst :: Vector{Int
             b = 0
             a, b = minmax(a, b)
             offsett = rand(rng, a:b)*rand(rng, 0:1)
+        elseif offset == :reference_balanced
+            # Make it so that the elements occuring before the reference
+            # Stay before the reference, even if new elements end up before it
+            offsett = 0
+            for i in mask
+                if orig_dst[i] < orig_dst[reference] && orig_donor[i] > orig_donor[reference]
+                    offsett -= 1
+                elseif orig_dst[i] > orig_dst[reference] && orig_donor[i] < orig_donor[reference]
+                    offsett += 1
+                end
+            end
         end
     end
     for i in mask
@@ -480,8 +491,8 @@ function edamixing(sol :: QGomeaSolution, pm :: QGomeaMixer; shuffle_fos=true, d
         for op in 1:2
             if op === 1
                 create_differential_donor!(pm.mixing_virtual_donor, pm.mixing_backup, donor, s, pm.rng,
-                    offset=0) #Can also be :rand_difference or :rand_neg1to1
-                if pm.repair == :ox
+                    offset=ifelse(pm.repair == :oxb || (pm.repair == :oxbr && rand(pm.rng, Bool)), :reference_balanced, 0)) #Can also be :rand_difference or :rand_neg1to1, :reference_balanced
+                if pm.repair == :ox || pm.repair == :oxb || pm.repair == :oxbr
                     mix_position_ox!(pm.mixing_backup, pm.mixing_virtual_donor, s, pm.mixing_perm, pm.mixing_perm_2)
                 elseif pm.repair == :pmx
                     mix_position_pmx!(pm.mixing_backup, pm.mixing_virtual_donor, s, pm.mixing_perm, pm.mixing_perm_2)
