@@ -83,7 +83,9 @@ function mix_position_pmx!(dst :: Vector{Int64}, donor :: Vector{Int64}, mask ::
     end
 end
 
-function create_differential_donor!(dst :: Vector{Int64}, orig_dst :: Vector{Int64}, orig_donor :: Vector{Int64}, mask :: Vector{Int64}, rng :: MersenneTwister; offset :: Union{Int64, Symbol} = 0)
+function create_differential_donor!(dst :: Vector{Int64}, 
+    orig_dst :: Vector{Int64}, orig_donor :: Vector{Int64}, mask :: Vector{Int64}, 
+    rng :: MersenneTwister; offset :: Union{Int64, Symbol} = 0)
     #reference = minimum((orig_donor[i],i) for i in mask)[2]
     reference = rand(rng, mask)
     if typeof(offset) === Int64
@@ -102,11 +104,12 @@ function create_differential_donor!(dst :: Vector{Int64}, orig_dst :: Vector{Int
             offsett = 0
             for i in mask
                 if orig_dst[i] < orig_dst[reference] && orig_donor[i] > orig_donor[reference]
-                    offsett -= 1
+                    offsett += 1 
                 elseif orig_dst[i] > orig_dst[reference] && orig_donor[i] < orig_donor[reference]
-                    offsett += 1
+                    offsett -= 1
                 end
             end
+            # println("Offset: $(offsett)")
         end
     end
     for i in mask
