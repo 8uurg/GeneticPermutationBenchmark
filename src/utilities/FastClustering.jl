@@ -65,7 +65,7 @@ function LCP!!(D :: Matrix,
                rng :: MersenneTwister;
                merge_distance :: Union{Nothing, Vector{Float64}} = nothing,
                parent_idx :: Union{Nothing, Vector{Int64}} = nothing,
-               randomized :: Bool = false) where
+               randomized :: Bool) where
                {T <: ClusteringReductionFormula, V}
     #
     @assert issymmetric(D) "D is required to be symmetric."
@@ -179,7 +179,7 @@ function LCP(D :: Matrix,
         rng :: MersenneTwister = MersenneTwister();
         merge_distance :: Union{Nothing, Vector{Float64}} = nothing,
         parent_idx :: Union{Nothing, Vector{Int64}} = nothing,
-        randomized :: Bool = false) where {T <: ClusteringReductionFormula, V <: Any}
+        randomized :: Bool = true) where {T <: ClusteringReductionFormula, V <: Any}
     n = size(D, 1)
     idxsetsize = _div64(n) + 1
     FoS = Vector{IndexSet{idxsetsize}}(undef, 2n-1)
