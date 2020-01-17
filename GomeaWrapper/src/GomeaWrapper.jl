@@ -2,6 +2,8 @@ module GomeaWrapper
 
 import Libdl
 
+export optimizeGOMEA
+
 # case  0: return( (char *) "Univariate" );
 # case  1: return( (char *) "Linkage Tree" );
 # case  2: return( (char *) "Multiscale Linkage Neighbors" );

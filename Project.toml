@@ -2,6 +2,7 @@
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Glob = "c27321d9-0574-5035-807b-f59d2c89b15c"
+GomeaWrapper = "2c9584c0-5f8b-11e9-27ed-032e25b5d063"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
