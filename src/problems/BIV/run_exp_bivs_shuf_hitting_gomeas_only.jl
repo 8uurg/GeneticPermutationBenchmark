@@ -7,7 +7,7 @@ using Random
 # Note: Set JULIA_NUM_THREADS to the amount of threads to use.
 
 # Number of runs, per approach, per instance
-n_exp = 2
+n_exp = 5
 # (Maximum) amount of time for each run, per instance in seconds.
 t_max = 100.0
 # (Maximum) amount of evaluations
@@ -22,10 +22,10 @@ if length(ARGS) > 0
 else
     exp_idx_offset = 0
 end
-path_results_time = "./results/results_exphit_biv_shuf_$(exp_idx_offset)_time.csv"
-path_results_evals = "./results/results_exphit_biv_shuf_$(exp_idx_offset)_evals.csv"
-path_results_time_hit = "./results/results_exphit_biv_shuf_$(exp_idx_offset)_time_hit.csv"
-path_results_evals_hit = "./results/results_exphit_biv_shuf_$(exp_idx_offset)_evals_hit.csv"
+path_results_time = "./results/results_exphit_biv_shuf_gomeas_$(exp_idx_offset)_time.csv"
+path_results_evals = "./results/results_exphit_biv_shuf_gomeas_$(exp_idx_offset)_evals.csv"
+path_results_time_hit = "./results/results_exphit_biv_shuf_gomeas_$(exp_idx_offset)_time_hit.csv"
+path_results_evals_hit = "./results/results_exphit_biv_shuf_gomeas_$(exp_idx_offset)_evals_hit.csv"
 
 # Make sure ./results exists
 if !isdir("./results")
@@ -86,17 +86,17 @@ approaches = [
         (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, fos_type=:random, target_fitness=target_fitness)),
     
     # Random Key SimpleGA
-    ("Random Key SimpleGA", (f, n, t, e; target_fitness) -> optimize_rksimplega(f, n, t, e, target_fitness=target_fitness)),
+    # ("Random Key SimpleGA", (f, n, t, e; target_fitness) -> optimize_rksimplega(f, n, t, e, target_fitness=target_fitness)),
     
     # Integer Permutation SimpleGA with various permutation crossover operators.
-    ("Integer Permutation SimpleGA - PMX", 
-        (f, n, t, e; target_fitness) -> optimize_ipsimplega(PMX(n), f, n, t, e, target_fitness=target_fitness)),
-    ("Integer Permutation SimpleGA - OX", 
-        (f, n, t, e; target_fitness) -> optimize_ipsimplega(OX(n), f, n, t, e, target_fitness=target_fitness)),
-    ("Integer Permutation SimpleGA - CX", 
-        (f, n, t, e; target_fitness) -> optimize_ipsimplega(CX(n), f, n, t, e, target_fitness=target_fitness)),
-    ("Integer Permutation SimpleGA - ER", 
-        (f, n, t, e; target_fitness) -> optimize_ipsimplega(ER(n), f, n, t, e, target_fitness=target_fitness)),
+    # ("Integer Permutation SimpleGA - PMX", 
+    #     (f, n, t, e; target_fitness) -> optimize_ipsimplega(PMX(n), f, n, t, e, target_fitness=target_fitness)),
+    # ("Integer Permutation SimpleGA - OX", 
+    #     (f, n, t, e; target_fitness) -> optimize_ipsimplega(OX(n), f, n, t, e, target_fitness=target_fitness)),
+    # ("Integer Permutation SimpleGA - CX", 
+    #     (f, n, t, e; target_fitness) -> optimize_ipsimplega(CX(n), f, n, t, e, target_fitness=target_fitness)),
+    # ("Integer Permutation SimpleGA - ER", 
+    #     (f, n, t, e; target_fitness) -> optimize_ipsimplega(ER(n), f, n, t, e, target_fitness=target_fitness)),
 ]
 
 println("Initializing instances")
@@ -104,31 +104,31 @@ println("Initializing instances")
 
 instances = [
     # Inversions benchmark function
-    ("Inversion n=10" , BIVInstance(sorted_inversion,  10), convert(Float64, div( 10*( 10-1), 2))),
-    ("Inversion n=15" , BIVInstance(sorted_inversion,  15), convert(Float64, div( 15*( 15-1), 2))),
-    ("Inversion n=20" , BIVInstance(sorted_inversion,  20), convert(Float64, div( 20*( 20-1), 2))),
-    ("Inversion n=25" , BIVInstance(sorted_inversion,  25), convert(Float64, div( 25*( 25-1), 2))),
-    ("Inversion n=50" , BIVInstance(sorted_inversion,  50), convert(Float64, div( 50*( 50-1), 2))),
-    ("Inversion n=100", BIVInstance(sorted_inversion, 100), convert(Float64, div(100*(100-1), 2))),
-    ("Inversion n=200", BIVInstance(sorted_inversion, 200), convert(Float64, div(200*(200-1), 2))),
-    ("Inversion n=400", BIVInstance(sorted_inversion, 400), convert(Float64, div(400*(400-1), 2))),
-    ("Inversion n=800", BIVInstance(sorted_inversion, 800), convert(Float64, div(800*(800-1), 2))),
+    # ("Inversion n=10" , BIVInstance(sorted_inversion,  10), convert(Float64, div( 10*( 10-1), 2))),
+    # ("Inversion n=15" , BIVInstance(sorted_inversion,  15), convert(Float64, div( 15*( 15-1), 2))),
+    # ("Inversion n=20" , BIVInstance(sorted_inversion,  20), convert(Float64, div( 20*( 20-1), 2))),
+    # ("Inversion n=25" , BIVInstance(sorted_inversion,  25), convert(Float64, div( 25*( 25-1), 2))),
+    # ("Inversion n=50" , BIVInstance(sorted_inversion,  50), convert(Float64, div( 50*( 50-1), 2))),
+    # ("Inversion n=100", BIVInstance(sorted_inversion, 100), convert(Float64, div(100*(100-1), 2))),
+    # ("Inversion n=200", BIVInstance(sorted_inversion, 200), convert(Float64, div(200*(200-1), 2))),
+    # ("Inversion n=400", BIVInstance(sorted_inversion, 400), convert(Float64, div(400*(400-1), 2))),
+    # ("Inversion n=800", BIVInstance(sorted_inversion, 800), convert(Float64, div(800*(800-1), 2))),
     # Sequential Inversions benchmark function
-    ("Sequential Inversion n=10" , BIVInstance(sorted_sequential_inversion,  10), convert(Float64,  10 - 1)),
-    ("Sequential Inversion n=15" , BIVInstance(sorted_sequential_inversion,  15), convert(Float64,  15 - 1)),
-    ("Sequential Inversion n=20" , BIVInstance(sorted_sequential_inversion,  20), convert(Float64,  20 - 1)),
-    ("Sequential Inversion n=25" , BIVInstance(sorted_sequential_inversion,  25), convert(Float64,  25 - 1)),
-    ("Sequential Inversion n=50" , BIVInstance(sorted_sequential_inversion,  50), convert(Float64,  50 - 1)),
+    # ("Sequential Inversion n=10" , BIVInstance(sorted_sequential_inversion,  10), convert(Float64,  10 - 1)),
+    # ("Sequential Inversion n=15" , BIVInstance(sorted_sequential_inversion,  15), convert(Float64,  15 - 1)),
+    # ("Sequential Inversion n=20" , BIVInstance(sorted_sequential_inversion,  20), convert(Float64,  20 - 1)),
+    # ("Sequential Inversion n=25" , BIVInstance(sorted_sequential_inversion,  25), convert(Float64,  25 - 1)),
+    # ("Sequential Inversion n=50" , BIVInstance(sorted_sequential_inversion,  50), convert(Float64,  50 - 1)),
     ("Sequential Inversion n=100", BIVInstance(sorted_sequential_inversion, 100), convert(Float64, 100 - 1)),
     ("Sequential Inversion n=200", BIVInstance(sorted_sequential_inversion, 200), convert(Float64, 200 - 1)),
     ("Sequential Inversion n=400", BIVInstance(sorted_sequential_inversion, 400), convert(Float64, 400 - 1)),
     ("Sequential Inversion n=800", BIVInstance(sorted_sequential_inversion, 800), convert(Float64, 800 - 1)),
     # Sequential Pairs benchmark function
-    ("Sequential Pairs n=10" , BIVInstance(sorted_sequential_pairs,  10), convert(Float64, 10 - 1)),
-    ("Sequential Pairs n=15" , BIVInstance(sorted_sequential_pairs,  15), convert(Float64, 15 - 1)),
-    ("Sequential Pairs n=20" , BIVInstance(sorted_sequential_pairs,  20), convert(Float64, 20 - 1)),
-    ("Sequential Pairs n=25" , BIVInstance(sorted_sequential_pairs,  25), convert(Float64, 25 - 1)),
-    ("Sequential Pairs n=50" , BIVInstance(sorted_sequential_pairs,  50), convert(Float64, 50 - 1)),
+    # ("Sequential Pairs n=10" , BIVInstance(sorted_sequential_pairs,  10), convert(Float64, 10 - 1)),
+    # ("Sequential Pairs n=15" , BIVInstance(sorted_sequential_pairs,  15), convert(Float64, 15 - 1)),
+    # ("Sequential Pairs n=20" , BIVInstance(sorted_sequential_pairs,  20), convert(Float64, 20 - 1)),
+    # ("Sequential Pairs n=25" , BIVInstance(sorted_sequential_pairs,  25), convert(Float64, 25 - 1)),
+    # ("Sequential Pairs n=50" , BIVInstance(sorted_sequential_pairs,  50), convert(Float64, 50 - 1)),
     ("Sequential Pairs n=100", BIVInstance(sorted_sequential_pairs, 100), convert(Float64,100 - 1)),
     ("Sequential Pairs n=200", BIVInstance(sorted_sequential_pairs, 200), convert(Float64,200 - 1)),
     ("Sequential Pairs n=400", BIVInstance(sorted_sequential_pairs, 400), convert(Float64,400 - 1)),

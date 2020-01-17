@@ -7,7 +7,7 @@ using Random
 # Note: Set JULIA_NUM_THREADS to the amount of threads to use.
 
 # Number of runs, per approach, per instance
-n_exp = 5
+n_exp = 2
 # (Maximum) amount of time for each run, per instance in seconds.
 t_max = 100.0
 # (Maximum) amount of evaluations
@@ -66,8 +66,8 @@ approaches = [
     #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :original, target_fitness=target_fitness)),
     ("qGOMEA - LT/Distance - 10x FI - OX", 
         (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :extended, target_fitness=target_fitness)),
-    # ("qGOMEA - LT/Distance - No FI - OX", 
-    #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, target_fitness=target_fitness)),
+    ("qGOMEA - LT/Distance - No FI - OX", 
+        (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, target_fitness=target_fitness)),
     
     # ("qGOMEA - LT/PermutationGOMEA Original - 10x FI - OX", 
     #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, fos_type=:original, target_fitness=target_fitness)),
@@ -80,8 +80,8 @@ approaches = [
     #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :original, fos_type=:random, target_fitness=target_fitness)),
     ("qGOMEA - RT - 10x FI - OX", 
         (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :extended, fos_type=:random, target_fitness=target_fitness)),
-    # ("qGOMEA - RT - No FI - OX", 
-    #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, fos_type=:random, target_fitness=target_fitness)),
+    ("qGOMEA - RT - No FI - OX", 
+        (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, fos_type=:random, target_fitness=target_fitness)),
     
     # Random Key SimpleGA
     ("Random Key SimpleGA", (f, n, t, e; target_fitness) -> optimize_rksimplega(f, n, t, e, target_fitness=target_fitness)),

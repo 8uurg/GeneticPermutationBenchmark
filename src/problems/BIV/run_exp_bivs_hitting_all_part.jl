@@ -7,7 +7,7 @@ using Random
 # Note: Set JULIA_NUM_THREADS to the amount of threads to use.
 
 # Number of runs, per approach, per instance
-n_exp = 2
+n_exp = 5
 # (Maximum) amount of time for each run, per instance in seconds.
 t_max = 100.0
 # (Maximum) amount of evaluations
@@ -22,10 +22,10 @@ if length(ARGS) > 0
 else
     exp_idx_offset = 0
 end
-path_results_time = "./results/results_exphit_biv_shuf_$(exp_idx_offset)_time.csv"
-path_results_evals = "./results/results_exphit_biv_shuf_$(exp_idx_offset)_evals.csv"
-path_results_time_hit = "./results/results_exphit_biv_shuf_$(exp_idx_offset)_time_hit.csv"
-path_results_evals_hit = "./results/results_exphit_biv_shuf_$(exp_idx_offset)_evals_hit.csv"
+path_results_time = "./results/results_exphit_biv_all_approaches_$(exp_idx_offset)_time.csv"
+path_results_evals = "./results/results_exphit_biv_all_approaches_$(exp_idx_offset)_evals.csv"
+path_results_time_hit = "./results/results_exphit_biv_all_approaches_$(exp_idx_offset)_time_hit.csv"
+path_results_evals_hit = "./results/results_exphit_biv_all_approaches_$(exp_idx_offset)_evals_hit.csv"
 
 # Make sure ./results exists
 if !isdir("./results")
@@ -37,8 +37,6 @@ println("Loading problem & approaches...")
 include("./biv.jl")
 # Load performance tracking utilities
 include("../../utilities/trace.jl")
-# Include permutation remapper
-include("../permutationtools.jl")
 # Load approaches
 include("../../approaches/pGOMEA/pGOMEA.jl")
 include("../../approaches/qGOMEA/qGOMEA.jl")
@@ -119,20 +117,20 @@ instances = [
     ("Sequential Inversion n=20" , BIVInstance(sorted_sequential_inversion,  20), convert(Float64,  20 - 1)),
     ("Sequential Inversion n=25" , BIVInstance(sorted_sequential_inversion,  25), convert(Float64,  25 - 1)),
     ("Sequential Inversion n=50" , BIVInstance(sorted_sequential_inversion,  50), convert(Float64,  50 - 1)),
-    ("Sequential Inversion n=100", BIVInstance(sorted_sequential_inversion, 100), convert(Float64, 100 - 1)),
-    ("Sequential Inversion n=200", BIVInstance(sorted_sequential_inversion, 200), convert(Float64, 200 - 1)),
-    ("Sequential Inversion n=400", BIVInstance(sorted_sequential_inversion, 400), convert(Float64, 400 - 1)),
-    ("Sequential Inversion n=800", BIVInstance(sorted_sequential_inversion, 800), convert(Float64, 800 - 1)),
+    # ("Sequential Inversion n=100", BIVInstance(sorted_sequential_inversion, 100), convert(Float64, 100 - 1)),
+    # ("Sequential Inversion n=200", BIVInstance(sorted_sequential_inversion, 200), convert(Float64, 200 - 1)),
+    # ("Sequential Inversion n=400", BIVInstance(sorted_sequential_inversion, 400), convert(Float64, 400 - 1)),
+    # ("Sequential Inversion n=800", BIVInstance(sorted_sequential_inversion, 800), convert(Float64, 800 - 1)),
     # Sequential Pairs benchmark function
     ("Sequential Pairs n=10" , BIVInstance(sorted_sequential_pairs,  10), convert(Float64, 10 - 1)),
     ("Sequential Pairs n=15" , BIVInstance(sorted_sequential_pairs,  15), convert(Float64, 15 - 1)),
     ("Sequential Pairs n=20" , BIVInstance(sorted_sequential_pairs,  20), convert(Float64, 20 - 1)),
     ("Sequential Pairs n=25" , BIVInstance(sorted_sequential_pairs,  25), convert(Float64, 25 - 1)),
     ("Sequential Pairs n=50" , BIVInstance(sorted_sequential_pairs,  50), convert(Float64, 50 - 1)),
-    ("Sequential Pairs n=100", BIVInstance(sorted_sequential_pairs, 100), convert(Float64,100 - 1)),
-    ("Sequential Pairs n=200", BIVInstance(sorted_sequential_pairs, 200), convert(Float64,200 - 1)),
-    ("Sequential Pairs n=400", BIVInstance(sorted_sequential_pairs, 400), convert(Float64,400 - 1)),
-    ("Sequential Pairs n=800", BIVInstance(sorted_sequential_pairs, 800), convert(Float64,800 - 1)),
+    # ("Sequential Pairs n=100", BIVInstance(sorted_sequential_pairs, 100), convert(Float64,100 - 1)),
+    # ("Sequential Pairs n=200", BIVInstance(sorted_sequential_pairs, 200), convert(Float64,200 - 1)),
+    # ("Sequential Pairs n=400", BIVInstance(sorted_sequential_pairs, 400), convert(Float64,400 - 1)),
+    # ("Sequential Pairs n=800", BIVInstance(sorted_sequential_pairs, 800), convert(Float64,800 - 1)),
 ]
 
 # Initialize results storage
@@ -173,7 +171,7 @@ begin
     # @distributed
     Threads.@threads for ((instance_name, instance, instance_opt), (approach_name, optimize_approach), exp_i) in experiments
         
-        bbf = random_remap(bb_wrap_biv(instance), instance.n)
+        bbf = bb_wrap_biv(instance)
         # Test evaluation.
         bbf(shuffle!(collect(1:instance.n)))
         # Perform GC for good measure.
