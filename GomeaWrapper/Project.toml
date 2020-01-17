@@ -1,0 +1,8 @@
+name = "GomeaWrapper"
+uuid = "2c9584c0-5f8b-11e9-27ed-032e25b5d063"
+authors = ["8uurg <arthur.guijt12@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+BinDeps = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
