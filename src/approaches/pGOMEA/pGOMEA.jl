@@ -520,7 +520,7 @@ function optimize_pgomea(rf :: Function, n :: Int64, t=10.0, e=typemax(Int64);
     best = initial_mixer.best
     upto_gen = SubpopulationStepcountGenerator(population_sizing_step_factor)
 
-    while (time() - time_start < t) && (n_evals <= e) && (target_fitness === nothing || best[].fitness <= target_fitness)
+    while (time() - time_start < t) && (n_evals <= e) && (target_fitness === nothing || best[].fitness < target_fitness)
         upto_mixer, _ = iterate(upto_gen)
         upto_mixer = min(upto_mixer, length(mixers))
 
