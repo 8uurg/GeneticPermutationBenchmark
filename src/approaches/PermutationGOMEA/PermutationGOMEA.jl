@@ -18,7 +18,7 @@ function optimize_permutationgomea(func :: Function, n :: Int64, t :: Float64, e
     end
     conv_t = -1
     if t != Inf
-        convert(Int64, t*1000)
+        conv_t = convert(Int64, t*1000)
     end
     obj, constr, best = optimizeGOMEA(wrap_objective(func, n), n; maxTime=conv_t, maxEvaluations=e, fosStructure=fosStructure, dependency_matrix_approach=fos_type, reencode=reencode, rescale=rescale)
     (obj, sortperm(best))
