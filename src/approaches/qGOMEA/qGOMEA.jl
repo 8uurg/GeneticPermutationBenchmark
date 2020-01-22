@@ -396,6 +396,24 @@ function calcD_order!(pm :: QGomeaMixer)
     pm.D
 end
 
+function calcD_order_inv!(pm :: QGomeaMixer)
+    fill!(pm.D, zero(Float64))
+    @inbounds for i in 1:pm.n
+        for j in i+1:pm.n
+            c_ab = 0
+            psize = length(pm.population)
+            for individual in pm.population
+                c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
+            end
+            δ₂ = entropy(c_ab / psize)
+            pm.D[i, j] = δ₂
+            pm.D[j, i] = pm.D[i, j]
+        end
+    end
+    #pm.D .= maximum(pm.D) .- pm.D
+    pm.D
+end
+
 function calcD_original_wq!(pm :: QGomeaMixer)
     fill!(pm.D, zero(Float64))
     @inbounds for i in 1:pm.n
@@ -448,9 +466,9 @@ function calcD_original_regularized!(pm :: QGomeaMixer)
                 c_dist += abs(individual.perm[i] - individual.perm[j])
                 c_ab += ifelse(individual.perm[i] > individual.perm[j], 1, 0)
             end
-            δ₁ = c_dist / (psize^2)
-            δ₂ = inv_weighted_once_inv_double_entropy(c_ab / psize, 0.3) + 0.3
-            pm.D[i, j] = δ₁ * δ₂
+            δ₁ = 1 - (c_dist + rand(pm.rng, Float64)*psize) / (psize^2)
+            δ₂ = 1 - entropy((c_ab + rand(pm.rng, Float64)) / (psize + 1))
+            pm.D[i, j] = -1 * δ₁ * δ₂
             pm.D[j, i] = pm.D[i, j]
         end
     end
@@ -604,6 +622,20 @@ function step!(pm :: QGomeaMixer)
         is_linkage_tree = true
     elseif pm.fos_type == :original_swap
         calcD_original!(pm)
+        is_linkage_tree = true
+        is_swapping = true
+    elseif pm.fos_type == :original_regularized
+        calcD_original_regularized!(pm)
+        is_linkage_tree = true
+    elseif pm.fos_type == :original_regularized_swap
+        calcD_original_regularized!(pm)
+        is_linkage_tree = true
+        is_swapping = true
+    elseif pm.fos_type == :order_inv
+        calcD_order_inv!(pm)
+        is_linkage_tree = true
+    elseif pm.fos_type == :order_inv_swap
+        calcD_order_inv!(pm)
         is_linkage_tree = true
         is_swapping = true
     elseif pm.fos_type == :order
