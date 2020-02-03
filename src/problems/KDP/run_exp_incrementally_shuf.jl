@@ -163,7 +163,7 @@ begin
         # println("Running $instance_name for approach $approach_idx")
         instance = KDPInstance(block_size, block_count)
         instance_opt = convert(Float64, instance.b)
-        exps = fetch.([@spawnat :any run_singular_exp(instance, approach_idx)])
+        exps = fetch.([@spawnat :any run_singular_exp(instance, approach_idx) for _ in 1:n_exp])
         successes = 0
         # println(exps)
         for (trace, result) in exps
