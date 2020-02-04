@@ -1,0 +1,113 @@
+instance,approach,exp_i,time,objective
+k4xb3,Permutation GOMEA - LT/Original - 10x FI,1,0.1770000457763672,3.0
+k4xb4,Permutation GOMEA - LT/Original - 10x FI,1,0.05900001525878906,4.0
+k4xb5,Permutation GOMEA - LT/Original - 10x FI,1,0.12299990653991699,5.0
+k4xb10,Permutation GOMEA - LT/Original - 10x FI,1,2.9140000343322754,10.0
+k4xb20,Permutation GOMEA - LT/Original - 10x FI,1,Inf,20.0
+k5xb3,Permutation GOMEA - LT/Original - 10x FI,1,0.1530001163482666,3.0
+k5xb4,Permutation GOMEA - LT/Original - 10x FI,1,1.128000020980835,4.0
+k5xb5,Permutation GOMEA - LT/Original - 10x FI,1,1.1729998588562012,5.0
+k5xb10,Permutation GOMEA - LT/Original - 10x FI,1,Inf,10.0
+k6xb3,Permutation GOMEA - LT/Original - 10x FI,1,5.575999975204468,3.0
+k6xb4,Permutation GOMEA - LT/Original - 10x FI,1,Inf,4.0
+k7xb3,Permutation GOMEA - LT/Original - 10x FI,1,Inf,3.0
+k4xb3,Permutation GOMEA - RT - 10x FI,1,0.015000104904174805,3.0
+k4xb4,Permutation GOMEA - RT - 10x FI,1,0.07899999618530273,4.0
+k4xb5,Permutation GOMEA - RT - 10x FI,1,0.252000093460083,5.0
+k4xb10,Permutation GOMEA - RT - 10x FI,1,2.889000177383423,10.0
+k4xb20,Permutation GOMEA - RT - 10x FI,1,Inf,20.0
+k5xb3,Permutation GOMEA - RT - 10x FI,1,0.807999849319458,3.0
+k5xb4,Permutation GOMEA - RT - 10x FI,1,Inf,4.0
+k6xb3,Permutation GOMEA - RT - 10x FI,1,2.3530001640319824,3.0
+k6xb4,Permutation GOMEA - RT - 10x FI,1,Inf,4.0
+k7xb3,Permutation GOMEA - RT - 10x FI,1,Inf,3.0
+k4xb3,qGOMEA - LT/Distance - 10x FI - OX,1,0.46199989318847656,3.0
+k4xb4,qGOMEA - LT/Distance - 10x FI - OX,1,0.3689999580383301,4.0
+k4xb5,qGOMEA - LT/Distance - 10x FI - OX,1,0.315000057220459,5.0
+k4xb10,qGOMEA - LT/Distance - 10x FI - OX,1,Inf,10.0
+k5xb3,qGOMEA - LT/Distance - 10x FI - OX,1,Inf,3.0
+k4xb3,qGOMEA - LT/PermutationGOMEA Original,1,0.017000198364257812,3.0
+k4xb4,qGOMEA - LT/PermutationGOMEA Original,1,0.06200003623962402,4.0
+k4xb5,qGOMEA - LT/PermutationGOMEA Original,1,1.1679999828338623,5.0
+k4xb10,qGOMEA - LT/PermutationGOMEA Original,1,Inf,10.0
+k5xb3,qGOMEA - LT/PermutationGOMEA Original,1,0.751000165939331,3.0
+k5xb4,qGOMEA - LT/PermutationGOMEA Original,1,Inf,4.0
+k6xb3,qGOMEA - LT/PermutationGOMEA Original,1,1.9649999141693115,3.0
+k6xb4,qGOMEA - LT/PermutationGOMEA Original,1,Inf,4.0
+k7xb3,qGOMEA - LT/PermutationGOMEA Original,1,Inf,3.0
+k4xb3,qGOMEA - RT - 10x FI - OX,1,0.03699994087219238,3.0
+k4xb4,qGOMEA - RT - 10x FI - OX,1,0.08000016212463379,4.0
+k4xb5,qGOMEA - RT - 10x FI - OX,1,0.25999999046325684,5.0
+k4xb10,qGOMEA - RT - 10x FI - OX,1,1.4110000133514404,10.0
+k4xb20,qGOMEA - RT - 10x FI - OX,1,Inf,20.0
+k5xb3,qGOMEA - RT - 10x FI - OX,1,0.2589998245239258,3.0
+k5xb4,qGOMEA - RT - 10x FI - OX,1,1.9689998626708984,4.0
+k5xb5,qGOMEA - RT - 10x FI - OX,1,3.2170000076293945,5.0
+k5xb10,qGOMEA - RT - 10x FI - OX,1,Inf,10.0
+k6xb3,qGOMEA - RT - 10x FI - OX,1,7.224999904632568,3.0
+k6xb4,qGOMEA - RT - 10x FI - OX,1,Inf,4.0
+k7xb3,qGOMEA - RT - 10x FI - OX,1,Inf,3.0
+k4xb3,Random Key SimpleGA,1,0.09099984169006348,3.0
+k4xb4,Random Key SimpleGA,1,0.003999948501586914,4.0
+k4xb5,Random Key SimpleGA,1,0.013000011444091797,5.0
+k4xb10,Random Key SimpleGA,1,0.6380000114440918,10.0
+k4xb20,Random Key SimpleGA,1,5.139999866485596,20.0
+k5xb3,Random Key SimpleGA,1,0.026000022888183594,3.0
+k5xb4,Random Key SimpleGA,1,0.07299995422363281,4.0
+k5xb5,Random Key SimpleGA,1,0.3040001392364502,5.0
+k5xb10,Random Key SimpleGA,1,Inf,10.0
+k6xb3,Random Key SimpleGA,1,2.882999897003174,3.0
+k6xb4,Random Key SimpleGA,1,7.426000118255615,4.0
+k6xb5,Random Key SimpleGA,1,Inf,5.0
+k7xb3,Random Key SimpleGA,1,Inf,3.0
+k4xb3,Integer Permutation SimpleGA - PMX,1,0.11100006103515625,3.0
+k4xb4,Integer Permutation SimpleGA - PMX,1,0.006999969482421875,4.0
+k4xb5,Integer Permutation SimpleGA - PMX,1,0.024000167846679688,5.0
+k4xb10,Integer Permutation SimpleGA - PMX,1,0.12800002098083496,10.0
+k4xb20,Integer Permutation SimpleGA - PMX,1,Inf,20.0
+k5xb3,Integer Permutation SimpleGA - PMX,1,0.019999980926513672,3.0
+k5xb4,Integer Permutation SimpleGA - PMX,1,0.1510000228881836,4.0
+k5xb5,Integer Permutation SimpleGA - PMX,1,1.8299999237060547,5.0
+k5xb10,Integer Permutation SimpleGA - PMX,1,Inf,10.0
+k6xb3,Integer Permutation SimpleGA - PMX,1,0.8969998359680176,3.0
+k6xb4,Integer Permutation SimpleGA - PMX,1,4.7179999351501465,4.0
+k6xb5,Integer Permutation SimpleGA - PMX,1,Inf,5.0
+k7xb3,Integer Permutation SimpleGA - PMX,1,2.2879998683929443,3.0
+k7xb4,Integer Permutation SimpleGA - PMX,1,Inf,4.0
+k8xb3,Integer Permutation SimpleGA - PMX,1,Inf,3.0
+k4xb3,Integer Permutation SimpleGA - OX,1,0.06799983978271484,3.0
+k4xb4,Integer Permutation SimpleGA - OX,1,0.0009999275207519531,4.0
+k4xb5,Integer Permutation SimpleGA - OX,1,0.0009999275207519531,5.0
+k4xb10,Integer Permutation SimpleGA - OX,1,0.2369999885559082,10.0
+k4xb20,Integer Permutation SimpleGA - OX,1,3.8899998664855957,20.0
+k5xb3,Integer Permutation SimpleGA - OX,1,0.019999980926513672,3.0
+k5xb4,Integer Permutation SimpleGA - OX,1,0.12399983406066895,4.0
+k5xb5,Integer Permutation SimpleGA - OX,1,0.16499996185302734,5.0
+k5xb10,Integer Permutation SimpleGA - OX,1,4.697999954223633,10.0
+k5xb20,Integer Permutation SimpleGA - OX,1,Inf,20.0
+k6xb3,Integer Permutation SimpleGA - OX,1,0.30699992179870605,3.0
+k6xb4,Integer Permutation SimpleGA - OX,1,0.38499999046325684,4.0
+k6xb5,Integer Permutation SimpleGA - OX,1,2.757999897003174,5.0
+k6xb10,Integer Permutation SimpleGA - OX,1,Inf,10.0
+k7xb3,Integer Permutation SimpleGA - OX,1,3.4700000286102295,3.0
+k7xb4,Integer Permutation SimpleGA - OX,1,6.039000034332275,4.0
+k7xb5,Integer Permutation SimpleGA - OX,1,Inf,5.0
+k8xb3,Integer Permutation SimpleGA - OX,1,Inf,3.0
+k4xb3,Integer Permutation SimpleGA - CX,1,0.08100008964538574,3.0
+k4xb4,Integer Permutation SimpleGA - CX,1,0.01699995994567871,4.0
+k4xb5,Integer Permutation SimpleGA - CX,1,0.018000125885009766,5.0
+k4xb10,Integer Permutation SimpleGA - CX,1,0.5950000286102295,10.0
+k4xb20,Integer Permutation SimpleGA - CX,1,Inf,20.0
+k5xb3,Integer Permutation SimpleGA - CX,1,0.051000118255615234,3.0
+k5xb4,Integer Permutation SimpleGA - CX,1,0.3269999027252197,4.0
+k5xb5,Integer Permutation SimpleGA - CX,1,0.8349997997283936,5.0
+k5xb10,Integer Permutation SimpleGA - CX,1,Inf,10.0
+k6xb3,Integer Permutation SimpleGA - CX,1,2.5180001258850098,3.0
+k6xb4,Integer Permutation SimpleGA - CX,1,Inf,4.0
+k7xb3,Integer Permutation SimpleGA - CX,1,Inf,3.0
+k4xb3,Integer Permutation SimpleGA - ER,1,0.07399988174438477,3.0
+k4xb4,Integer Permutation SimpleGA - ER,1,0.015000104904174805,4.0
+k4xb5,Integer Permutation SimpleGA - ER,1,Inf,5.0
+k5xb3,Integer Permutation SimpleGA - ER,1,6.435999870300293,3.0
+k5xb4,Integer Permutation SimpleGA - ER,1,Inf,4.0
+k6xb3,Integer Permutation SimpleGA - ER,1,Inf,3.0

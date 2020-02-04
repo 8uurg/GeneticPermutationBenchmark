@@ -105,7 +105,7 @@ println("Loading problem & approaches...")
 println("Initializing instances")
 # Initialize instances.
 @everywhere func = [
-    ("Inversion", sorted_inversion, n -> convert(Float64, div( 10*( 10-1), 2))), 
+    ("Inversion", sorted_inversion, n -> convert(Float64, div( n*( n-1), 2)) ), 
     ("Sequential Inversion", sorted_sequential_inversion, n -> convert(Float64, n - 1)),
     ("Sequential Pairs", sorted_sequential_pairs, n -> convert(Float64, n - 1))
 ]
