@@ -1,6 +1,6 @@
 println("Setting up...")
 using Distributed
-n_proc = 1
+n_proc = 6
 addprocs(n_proc)
 @everywhere import Glob:glob
 @everywhere import DataFrames:DataFrame
@@ -11,10 +11,10 @@ addprocs(n_proc)
 # Note: Set JULIA_NUM_THREADS to the amount of threads to use.
 
 # Number of runs, per approach, per instance
-@everywhere n_exp = 1
+@everywhere n_exp = 5
 @everywhere success_threshold = 1 
 # (Maximum) amount of time for each run, per instance in seconds.
-@everywhere t_max = 10.0
+@everywhere t_max = 100.0
 # (Maximum) amount of evaluations
 @everywhere e_max = typemax(Int64) # 10000000
 # Sidenote: An approach can converge and not use up the evaluations.
@@ -214,7 +214,8 @@ begin
     
     @sync begin
         @async begin
-            exps_approaches = fetch.([(i_a, @spawnat :any run_experiment_tier(i_f, 1, i_a)) for i_a in 1:length(approaches) for i_f in 1:length(func)])
+            exps_approaches_futures = [(i_a, @spawnat :any run_experiment_tier(i_f, 1, i_a)) for i_a in 1:length(approaches) for i_f in 1:length(func)]
+            exps_approaches = map(f -> (f[1], fetch(f[2])), exps_approaches_futures)
             # Finish up the progressbar.
             put!(progress_channel, expected_exps)
         end

@@ -214,7 +214,8 @@ begin
     
     @sync begin
         @async begin
-            exps_approaches = fetch.([(i_a, @spawnat :any run_experiment_tier(i_f, 1, i_a)) for i_a in 1:length(approaches) for i_f in 1:length(func)])
+            exps_approaches_futures = [(i_a, @spawnat :any run_experiment_tier(i_f, 1, i_a)) for i_a in 1:length(approaches) for i_f in 1:length(func)]
+            exps_approaches = map(f -> (f[1], fetch(f[2])), exps_approaches_futures)
             # Finish up the progressbar.
             put!(progress_channel, expected_exps)
         end
