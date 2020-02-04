@@ -1,6 +1,6 @@
 println("Setting up...")
 using Distributed
-n_proc = 1
+n_proc = 8
 addprocs(n_proc)
 @everywhere import Glob:glob
 @everywhere import DataFrames:DataFrame
@@ -11,10 +11,10 @@ addprocs(n_proc)
 # Note: Set JULIA_NUM_THREADS to the amount of threads to use.
 
 # Number of runs, per approach, per instance
-@everywhere n_exp = 1
-@everywhere success_threshold = 1 
+@everywhere n_exp = 25
+@everywhere success_threshold = 5
 # (Maximum) amount of time for each run, per instance in seconds.
-@everywhere t_max = 10.0
+@everywhere t_max = 100.0
 # (Maximum) amount of evaluations
 @everywhere e_max = typemax(Int64) # 10000000
 # Sidenote: An approach can converge and not use up the evaluations.
@@ -73,8 +73,8 @@ println("Loading problem & approaches...")
     #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :original, target_fitness=target_fitness)),
     ("qGOMEA - LT/Distance - 10x FI - OX", 
         (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :extended, target_fitness=target_fitness)),
-    # ("qGOMEA - LT/Distance - No FI - OX", 
-    #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, target_fitness=target_fitness)),
+    ("qGOMEA - LT/Distance - No FI - OX", 
+        (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, target_fitness=target_fitness)),
     
     ("qGOMEA - LT/PermutationGOMEA Original", 
         (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, fos_type=:original, target_fitness=target_fitness)),
@@ -85,8 +85,8 @@ println("Loading problem & approaches...")
     #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :original, fos_type=:random, target_fitness=target_fitness)),
     ("qGOMEA - RT - 10x FI - OX", 
         (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :extended, fos_type=:random, target_fitness=target_fitness)),
-    # ("qGOMEA - RT - No FI - OX", 
-    #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, fos_type=:random, target_fitness=target_fitness)),
+    ("qGOMEA - RT - No FI - OX", 
+        (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, fos_type=:random, target_fitness=target_fitness)),
     
     # Random Key SimpleGA
     ("Random Key SimpleGA", (f, n, t, e; target_fitness) -> optimize_rksimplega(f, n, t, e, target_fitness=target_fitness)),
