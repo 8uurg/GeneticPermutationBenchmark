@@ -164,5 +164,3 @@ function qap_tsp_weight_matrix(n :: Int64)
     m[n, 1] = 1
     return m
 end
-
-# p = optimize_gomea(bb_wrap_qap(QAPInstance(insta.n, qap_inverted_distance_weight_matrix(insta.n), copy(insta.A))), insta.n, 10.0; forced_improvement=:extended)
