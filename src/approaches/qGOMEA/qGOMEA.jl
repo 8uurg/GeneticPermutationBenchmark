@@ -85,7 +85,7 @@ end
 
 function create_differential_donor!(dst :: Vector{Int64}, 
     orig_dst :: Vector{Int64}, orig_donor :: Vector{Int64}, mask :: Vector{Int64}, 
-    rng :: MersenneTwister; offset :: Union{Int64, Symbol} = 0)
+    rng :: MersenneTwister; offset :: Union{Int64, Symbol} = 0, repair :: Symbol = :shift)
     #reference = minimum((orig_donor[i],i) for i in mask)[2]
     reference = rand(rng, mask)
     if typeof(offset) === Int64
@@ -118,17 +118,28 @@ function create_differential_donor!(dst :: Vector{Int64},
         dst[i] = orig_donor[reference] + orig_dst[i] - orig_dst[reference] + offsett
     end
     dst_min, dst_max = extrema(dst[i] for i in mask)
-    if dst_min < 1
-        # Need to do a repair for negative numbers.
-        for i in mask
-            dst[i] += -dst_min + 1
+    if repair == :shift
+        if dst_min < 1
+            # Need to do a repair for negative numbers.
+            for i in mask
+                dst[i] += -dst_min + 1
+            end
+        elseif dst_max > length(dst)
+            # Fix the out of bounds elements!
+            dstdiff = length(dst) - dst_max
+            for i in mask
+                dst[i] += dstdiff
+            end
         end
-    elseif dst_max > length(dst)
-        # Fix the out of bounds elements!
-        dstdiff = length(dst) - dst_max
-        for i in mask
-            dst[i] += dstdiff
+    elseif repair == :mod
+        if dst_min < 1 || dst_max > length(dst)
+            n = length(dst)
+            for i in mask
+                dst[i] = mod(dst[i] - 1, n) + 1
+            end
         end
+    else
+        error("Unknown donor repair approach")
     end
     return dst
 end

@@ -7,11 +7,12 @@ regex = r"([A-Za-z][A-Za-z0-9]*) +[0-9]+ +([0-9]+) +\([^\)]*\)(?: +([0-9]+))?"
 def parse_table(table, result):
     matches = re.finditer(regex, table)
     for match in matches:
-        name = match.group(1)
-        ub   = match.group(2)
-        lb   = ub
-        if match.groups == 3:
-            lb = match.group(3)
+        matchgroups = match.groups()
+        name = matchgroups[0]
+        ub   = matchgroups[1]
+        lb   = matchgroups[2]
+        if lb is None:
+            lb = ub
         result.append((name, ub, lb))
     return result
 
@@ -28,4 +29,4 @@ for table in tables:
 
 print(f"name\tub\tlb")
 for r in result:
-    print(f"{r[0]}\t{r[1]}\t{r[1]}")
+    print(f"{r[0]}\t{r[1]}\t{r[2]}")
