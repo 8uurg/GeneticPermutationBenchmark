@@ -7,7 +7,7 @@ using Random
 # Note: Set JULIA_NUM_THREADS to the amount of threads to use.
 
 # Number of runs, per approach, per instance
-n_exp = 5
+n_exp = 20
 # (Maximum) amount of time for each run, per instance in seconds.
 t_max = 100.0
 # (Maximum) amount of evaluations
@@ -72,8 +72,8 @@ approaches = [
     # ("qGOMEA - LT/Distance - No FI - OX", 
     #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, target_fitness=target_fitness)),
     
-    # ("qGOMEA - LT/PermutationGOMEA Original", 
-    #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, fos_type=:original, target_fitness=target_fitness)),
+    ("qGOMEA - LT/PermutationGOMEA Original", 
+        (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, fos_type=:original, target_fitness=target_fitness)),
     # ("qGOMEA - LT/Distance - 10x FI - PMX", 
     #     (f, n, t, e; target_fitness) -> optimize_qgomea(f, n, t, e, permutation_repair=:pmx, target_fitness=target_fitness)),
 
