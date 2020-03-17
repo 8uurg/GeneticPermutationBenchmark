@@ -17,7 +17,7 @@ end
         t_machine = zeros(T, instance.m))
 
 Evaluate `permutation` against PFSInstance `instance`, and 
-return its objective value: the flow time of the schedule.
+return its objective value: the maximum flow time of the schedule.
 
 The variable `t_machine` is the vector used to store the current completion time 
 of each machine during the process of evaluating the schedule.
@@ -47,7 +47,43 @@ function evaluate_pfs(instance :: PFSInstance{T}, permutation :: Vector{Int64},
 end
 
 """
-    bb_wrap_pfs(instance :: QAPInstance{T})
+    evaluate_pfs_tft(instance :: PFSInstance{T}, permutation :: Vector{Int64};
+        t_machine = zeros(T, instance.m))
+
+Evaluate `permutation` against PFSInstance `instance`, and 
+return its objective value: the total flow time of the schedule.
+
+The variable `t_machine` is the vector used to store the current completion time 
+of each machine during the process of evaluating the schedule.
+
+!!!note It is recommended to reuse the same vector `t_machine` for every evaluation.
+        This avoids allocating and deallocating memory, and therefore relieves
+        some pressure off the garbage collector.
+"""
+function evaluate_pfs_tft(instance :: PFSInstance{T}, permutation :: Vector{Int64},
+        t_machine :: Vector{T} = zeros(T, instance.m)) :: T where {T <: Int64}
+    # Make sure the current completion time for each machine is zero.
+    fill!(t_machine, zero(T))
+    total_flow_time = 0
+
+    # Go over each job in the order of the permutation
+    for j in permutation
+        # The first task of the job always completes at start + P[1, j]
+        t_machine[1] = t_machine[1] + instance.P[1, j]
+        # The following tasks can only start when the machine is done 
+        # /and/ the task at the previous machine is done.
+        for x in 2:instance.m
+            t_machine[x] = max(t_machine[x-1], t_machine[x]) + instance.P[x, j]
+        end
+        total_flow_time += t_machine[end]
+    end
+
+    # Returned 
+    return total_flow_time
+end
+
+"""
+    bb_wrap_pfs(instance :: PFSInstance{T})
 
 Wrap an instance of Permutation Flowshop Scheduling and return a black box
 that takes a permutation and returns its fitness value on the given instance.
@@ -58,6 +94,23 @@ function bb_wrap_pfs(instance :: PFSInstance{T}) where {T <: Real}
 
     function evaluate(permutation :: Vector{Int64}) :: T
         return -evaluate_pfs(instance, permutation, t_machine)
+    end
+
+    return evaluate
+end
+
+"""
+    bb_wrap_pfs_tft(instance :: PFSInstance{T})
+
+Wrap an instance of Permutation Flowshop Scheduling and return a black box
+that takes a permutation and returns its fitness value on the given instance.
+"""
+function bb_wrap_pfs_tft(instance :: PFSInstance{T}) where {T <: Real}
+    # Preallocate the additional memory used in the evaluation.
+    t_machine = zeros(T, instance.m)
+
+    function evaluate(permutation :: Vector{Int64}) :: T
+        return -evaluate_pfs_tft(instance, permutation, t_machine)
     end
 
     return evaluate
