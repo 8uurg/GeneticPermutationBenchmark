@@ -327,6 +327,10 @@ function edamixing(sol :: PGomeaSolution, pm :: PGomeaMixer; shuffle_fos=true, d
                 best_improved = true
             end
         end
+        # Early exit for FI upon improvement.
+        if donor_fixed !== nothing && current_improved
+            return best_improved, solution_changed
+        end
     end
     return best_improved, solution_changed
 end
@@ -423,7 +427,7 @@ function step!(pm :: PGomeaMixer)
         improved_any_this_mix, solution_changed = edamixing(individual, pm)
         improved_any |= improved_any_this_mix
         # Forced improvement.
-        if pm.forced_improvement != :none && ((allow_fi_upon_unchanged_solution && !solution_changed) ||
+        if pm.forced_improvement != :none && !improved_any && ((allow_fi_upon_unchanged_solution && !solution_changed) ||
             pm.generations_no_improvement[] > fi_threshold)
             improved_any_this_mix, _ = edamixing(individual, pm; donor_fixed = pm.best)
             improved_any |= improved_any_this_mix
