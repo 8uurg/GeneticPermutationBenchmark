@@ -1,0 +1,2 @@
+cd ./src/problems/BIV && julia -O3 --project=. ./run_exp_incrementally_ord.jl
+cd ./src/problems/BIV && julia -O3 --project=. ./run_exp_incrementally_shuf.jl
