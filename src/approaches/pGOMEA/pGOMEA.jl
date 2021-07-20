@@ -422,7 +422,10 @@ function step!(pm :: PGomeaMixer)
     end
 
     # Perform Optimal Mixing on population
-    for individual in pm.population
+    # Isolate the offspring population by a clone.
+    offspring = deepcopy(pm.population)
+
+    for individual in offspring
         # Normal Mixing.
         improved_any_this_mix, solution_changed = edamixing(individual, pm)
         improved_any |= improved_any_this_mix
@@ -433,6 +436,9 @@ function step!(pm :: PGomeaMixer)
             improved_any |= improved_any_this_mix
         end
     end
+
+    # Copy over the resulting offspring to the population.
+    copyto!(pm.population, offspring)
 
     # Update statistics
     pm.generations[] += 1

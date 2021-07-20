@@ -740,7 +740,10 @@ function step!(pm :: QGomeaMixer)
         allow_fi_upon_unchanged_solution = true
     end
 
-    for individual in pm.population
+    # Isolate the offspring population by a clone.
+    offspring = deepcopy(pm.population)
+
+    for individual in offspring
         # Normal Mixing.
         improved_any_this_mix, solution_changed = edamixing(individual, pm)
         improved_any |= improved_any_this_mix
@@ -751,6 +754,9 @@ function step!(pm :: QGomeaMixer)
             improved_any |= improved_any_this_mix
         end
     end
+
+    # Copy over the resulting offspring to the population.
+    copyto!(pm.population, offspring)
 
     pm.generations[] += 1
 
