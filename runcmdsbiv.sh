@@ -1,4 +1,4 @@
-export JULIA_NUM_THREADS = 16
+export JULIA_NUM_THREADS=16
 
 echo "Running BIV incrementally for all"
 
@@ -7,7 +7,7 @@ echo "Running BIV incrementally for all"
 # However, as this will be ran on a different machine,
 # all approaches will be re-ran instead.
 
-cat ./cmdsbiv.txt | xargs -P 0 -n 1 -d '\n' sh -c
+cat ./cmdsbiv.txt | xargs -P 2 -n 1 -d '\n' sh -c
 # TODO: Add more copy commands for other problems - if needed
 mkdir -p ./results/BIV && cp -r ./src/problems/BIV/results/* ./results/BIV/
 tar -czf ./results.tar.gz ./results

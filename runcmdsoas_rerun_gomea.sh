@@ -1,4 +1,4 @@
-export JULIA_NUM_THREADS = 16
+export JULIA_NUM_THREADS=16
 # Rerunning GOMEA due to inconsistency (implementation is steady state, while it shouldn't be)
 
 cat ./cmdsoas_rerun_gomea.txt | xargs -P 1 -n 1 -d '\n' sh -c
