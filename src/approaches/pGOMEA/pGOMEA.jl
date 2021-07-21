@@ -100,6 +100,7 @@ struct PGomeaMixer
     f :: Function
     n :: Int64
     population :: Vector{PGomeaSolution}
+    offspring :: Vector{PGomeaSolution}
     D :: Matrix{Float64}
     fos :: Vector{Vector{Int64}}
     # Internal config.
@@ -134,7 +135,7 @@ struct PGomeaMixer
         crf :: ClusteringReductionFormula,
         rng :: MersenneTwister)
         #
-        new(f, n, population, D, fos,
+        new(f, n, population, deepcopy(population), D, fos,
             forced_improvement, fos_type, rescale_probability, crf,
             Ref(maximum(population)),
             Ref(0), Ref(0), Ref(false),
@@ -157,7 +158,7 @@ struct PGomeaMixer
         rng :: MersenneTwister)
         #
         best[] = max(best[], maximum(population))
-        new(f, n, population, D, fos,
+        new(f, n, population, deepcopy(population), D, fos,
             forced_improvement, fos_type, rescale_probability, crf,
             best,
             Ref(0), Ref(0), Ref(false),
@@ -422,10 +423,13 @@ function step!(pm :: PGomeaMixer)
     end
 
     # Perform Optimal Mixing on population
-    # Isolate the offspring population by a clone.
-    offspring = deepcopy(pm.population)
+    # Isolate the offspring population from the population used as model.
+    for i in 1:length(pm.population)
+        copyto!(pm.offspring[i].perm, pm.population[i].perm)
+        pm.offspring[i].fitness = pm.population[i].fitness
+    end
 
-    for individual in offspring
+    for individual in pm.offspring
         # Normal Mixing.
         improved_any_this_mix, solution_changed = edamixing(individual, pm)
         improved_any |= improved_any_this_mix
@@ -438,7 +442,10 @@ function step!(pm :: PGomeaMixer)
     end
 
     # Copy over the resulting offspring to the population.
-    copyto!(pm.population, offspring)
+    for i in 1:length(pm.population)
+        copyto!(pm.population[i].perm, pm.offspring[i].perm)
+        pm.population[i].fitness = pm.offspring[i].fitness
+    end
 
     # Update statistics
     pm.generations[] += 1

@@ -198,6 +198,7 @@ struct QGomeaMixer
     f :: Function
     n :: Int64
     population :: Vector{QGomeaSolution}
+    offspring :: Vector{QGomeaSolution}
     D :: Matrix{Float64}
     fos :: Vector{Vector{Int64}}
     # Internal config.
@@ -235,7 +236,7 @@ struct QGomeaMixer
         repair :: Symbol,
         rng :: MersenneTwister)
         #
-        new(f, n, population, D, fos,
+        new(f, n, population, deepcopy(population), D, fos,
             forced_improvement, fos_type, gather_probability, crf, repair,
             Ref(maximum(population)),
             Ref(0), Ref(0), Ref(false),
@@ -259,7 +260,7 @@ struct QGomeaMixer
         rng :: MersenneTwister)
         #
         best[] = max(best[], maximum(population))
-        new(f, n, population, D, fos,
+        new(f, n, population, deepcopy(population), D, fos,
             forced_improvement, fos_type, gather_probability, crf, repair,
             best,
             Ref(0), Ref(0), Ref(false),
@@ -740,10 +741,14 @@ function step!(pm :: QGomeaMixer)
         allow_fi_upon_unchanged_solution = true
     end
 
-    # Isolate the offspring population by a clone.
-    offspring = deepcopy(pm.population)
+    # Copy population to offspring population.
+    # Isolate the offspring population from the population used as model.
+    for i in 1:length(pm.population)
+        copyto!(pm.offspring[i].perm, pm.population[i].perm)
+        pm.offspring[i].fitness = pm.population[i].fitness
+    end
 
-    for individual in offspring
+    for individual in pm.offspring
         # Normal Mixing.
         improved_any_this_mix, solution_changed = edamixing(individual, pm)
         improved_any |= improved_any_this_mix
@@ -756,7 +761,10 @@ function step!(pm :: QGomeaMixer)
     end
 
     # Copy over the resulting offspring to the population.
-    copyto!(pm.population, offspring)
+    for i in 1:length(pm.population)
+        copyto!(pm.population[i].perm, pm.offspring[i].perm)
+        pm.population[i].fitness = pm.offspring[i].fitness
+    end
 
     pm.generations[] += 1
 
