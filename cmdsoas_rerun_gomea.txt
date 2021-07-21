@@ -1,1 +1,1 @@
-cd ./src/problems/OAS && julia -O3 --project=. ./run_exp_qaplib_extended.jl 6
+cd ./src/problems/OAS && julia -O3 --project=../../.. ./run_exp_oas_paper_subset_gomeas.jl 0
