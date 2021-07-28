@@ -8,8 +8,6 @@ addprocs(n_proc)
 @everywhere import CSV:CSV
 @everywhere using Random
 
-# Note: Set JULIA_NUM_THREADS to the amount of threads to use.
-
 # Number of runs, per approach, per instance
 @everywhere n_exp = 25
 @everywhere success_threshold = 5
