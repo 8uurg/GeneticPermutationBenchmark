@@ -177,7 +177,7 @@ begin
 
     experiments = collect(Iterators.product(instances, approaches, 1:n_exp))
     
-    println("Starting experiment, running a total of $(length(experiments)) experiments on $(Threads.nthreads()) thread(s).")
+    println("Starting experiment, running a total of $(length(experiments)) experiments.")
 
     progress = Progress(length(experiments))
     # @distributed
