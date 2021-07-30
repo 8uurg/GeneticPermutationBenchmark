@@ -112,17 +112,17 @@ approaches = [
         (f, n, t, e) -> optimize_qgomea(f, n, t, e, forced_improvement = :none, fos_type=:random)),
     
     # Random Key SimpleGA
-    # ("Random Key SimpleGA", (f, n, t, e) -> optimize_rksimplega(f, n, t, e)),
+    ("Random Key SimpleGA", (f, n, t, e) -> optimize_rksimplega(f, n, t, e)),
     
     # Integer Permutation SimpleGA with various permutation crossover operators.
-    # ("Integer Permutation SimpleGA - PMX", 
-    #     (f, n, t, e) -> optimize_ipsimplega(PMX(n), f, n, t, e)),
-    # ("Integer Permutation SimpleGA - OX", 
-    #     (f, n, t, e) -> optimize_ipsimplega(OX(n), f, n, t, e)),
-    # ("Integer Permutation SimpleGA - CX", 
-    #     (f, n, t, e) -> optimize_ipsimplega(CX(n), f, n, t, e)),
-    # ("Integer Permutation SimpleGA - ER", 
-    #     (f, n, t, e) -> optimize_ipsimplega(ER(n), f, n, t, e)),
+    ("Integer Permutation SimpleGA - PMX", 
+        (f, n, t, e) -> optimize_ipsimplega(PMX(n), f, n, t, e)),
+    ("Integer Permutation SimpleGA - OX", 
+        (f, n, t, e) -> optimize_ipsimplega(OX(n), f, n, t, e)),
+    ("Integer Permutation SimpleGA - CX", 
+        (f, n, t, e) -> optimize_ipsimplega(CX(n), f, n, t, e)),
+    ("Integer Permutation SimpleGA - ER", 
+        (f, n, t, e) -> optimize_ipsimplega(ER(n), f, n, t, e)),
 ]
 
 println("Reading and parsing instances")
