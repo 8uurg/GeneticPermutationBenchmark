@@ -111,11 +111,11 @@ instances = collect(Iterators.flatten(
 
 # Initialize results storage
 results_time = DataFrame(
-    [   String,    String,  Int64, Float64,    Float64], 
-    [:instance, :approach, :exp_i,   :time, :objective])
+    [Vector{String}(), Vector{String}(), Vector{Int64}(), Vector{Float64}(), Vector{Float64}()], 
+    [       :instance,        :approach,          :exp_i,             :time,        :objective])
 results_eval = DataFrame(
-    [   String,    String,  Int64,        Int64,    Float64], 
-    [:instance, :approach, :exp_i, :evaluations, :objective])
+    [Vector{String}(), Vector{String}(), Vector{Int64}(), Vector{Int64}(), Vector{Float64}()], 
+    [       :instance,        :approach,          :exp_i,    :evaluations,        :objective])
 
 begin
     println("Warming up approaches")
