@@ -23,10 +23,10 @@ moments_eval = [e_max]
 approach_idx = parse(Int64, ARGS[1])
 exp_idx_offset = rand(UInt32)
 # end
-path_results_time = "./results/results_qap_qaplib_$(approach_idx)_$(exp_idx_offset)_time.csv"
-path_results_evals = "./results/results_qap_qaplib_$(approach_idx)_$(exp_idx_offset)_evals.csv"
-path_results_hittime = "./results/results_qap_qaplib_$(approach_idx)_$(exp_idx_offset)_hittime.csv"
-path_results_hitevals = "./results/results_qap_qaplib_$(approach_idx)_$(exp_idx_offset)_hitevals.csv"
+path_results_time = "./results/results_qap_qaplib_rrg_$(approach_idx)_$(exp_idx_offset)_time.csv"
+path_results_evals = "./results/results_qap_qaplib_rrg_$(approach_idx)_$(exp_idx_offset)_evals.csv"
+path_results_hittime = "./results/results_qap_qaplib_rrg_$(approach_idx)_$(exp_idx_offset)_hittime.csv"
+path_results_hitevals = "./results/results_qap_qaplib_rrg_$(approach_idx)_$(exp_idx_offset)_hitevals.csv"
 path_instances = "./instances/qaplib/instances"
 
 # Make sure ./results exists
