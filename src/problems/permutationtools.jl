@@ -35,3 +35,11 @@ function random_remap_and_give_mapping(f :: Function, n :: Int64)
     end
     return rex, mapping
 end
+
+function inverse_permutation(f :: Function, n :: Int64)
+    working_memory = collect(1:n)
+    return function (perm :: Vector{Int64})
+        invperm!(working_memory, perm)
+        return f(working_memory)
+    end
+end
