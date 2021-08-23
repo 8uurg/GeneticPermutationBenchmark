@@ -589,6 +589,8 @@ function edamixing(sol :: QGomeaSolution, pm :: QGomeaMixer; shuffle_fos=true, d
             fitness = pm.f(pm.mixing_backup)
             if fitness < sol.fitness #|| (pm.mixing_backup == donor)
                 copyto!(pm.mixing_backup, dst)
+            elseif (donor_fixed !== nothing) && fitness == sol.fitness
+                copyto!(pm.mixing_backup, dst)
             elseif fitness == sol.fitness
                 # GOMEA generally copies over even without improvements.
                 copyto!(dst, pm.mixing_backup)
