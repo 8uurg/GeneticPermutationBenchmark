@@ -121,8 +121,8 @@ approaches = [
         (f, n, t, e) -> optimize_ipsimplega(OX(n), f, n, t, e)),
     ("Integer Permutation SimpleGA - CX", 
         (f, n, t, e) -> optimize_ipsimplega(CX(n), f, n, t, e)),
-    ("Integer Permutation SimpleGA - ER", 
-        (f, n, t, e) -> optimize_ipsimplega(ER(n), f, n, t, e)),
+    # ("Integer Permutation SimpleGA - ER", 
+    #     (f, n, t, e) -> optimize_ipsimplega(ER(n), f, n, t, e)),
 ]
 
 println("Reading and parsing instances")
